@@ -1,0 +1,135 @@
+- name: Setup base hpc
+  hosts: all
+  gather_facts: true
+  tasks:
+  - name: Add user hpc
+    become: yes
+    user:
+      name: hpc
+      shell: /bin/bash
+
+  - name: Set SSH key
+    become: yes
+    authorized_key:
+      user: hpc
+      state: present
+      key: "{{ lookup('file', '~/hpc.key.pub') }}"
+
+  - name: Distribute private keyfiles to hosts
+    become: yes
+    become_user: hpc
+    copy: 
+      src: "~/hpc.key"
+      dest: "/home/hpc/.ssh/id_dsa" 
+      mode: 0600
+
+  - name: Add hpc to sudoers
+    become: yes
+    copy:
+      dest: "/etc/sudoers.d/devops"
+      content: "hpc  ALL=(ALL)  NOPASSWD: ALL"
+
+  - name: Disable host SSH key checking
+    become: yes
+    become_user: hpc
+    copy:
+      dest: "~/.ssh/config"
+      content: "Host *\n    StrictHostKeyChecking no\n"
+
+  - name: Install packages for compilation
+    become: yes
+    apt:
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - cmake
+      - git
+      - makedepf90
+      - gfortran
+      - gcc
+      - libnetcdf-dev
+      - libnetcdff-dev
+      - netcdf-bin
+      - openmpi-bin
+      - openmpi-common
+      - libopenmpi-dev
+      - libhdf5-openmpi-dev
+      - patch
+      - htop
+      - iptraf-ng
+
+
+    
+  - name: Install azcopy to /usr/bin
+    become: yes
+    unarchive:
+      src: https://aka.ms/downloadazcopy-v10-linux
+      dest: /usr/bin
+      creates: /usr/bin/azcopy
+      remote_src: yes
+      extra_opts: [--strip-components=1]
+    retries: 3
+
+  - name: Download blob
+    become: yes
+    become_user: hpc
+    shell: 'azcopy copy "{{ lookup("env","SAS_URL") }}" ~/ --recursive=true'
+
+  - name: Compile
+    become: yes
+    become_user: hpc
+    shell: |
+      cd
+      chmod -R 755 fvcom
+      cd fvcom/FVCOM41/Configure/
+      ./setup -a UBUNTU-18.04-GCC -c wvi_inlets4_heating
+
+      make clean
+      make libs gotm fvcom -j `nproc`
+      make -j `nproc`
+      cd
+      cp fvcom/FVCOM41/FVCOM_source/fvcom fvcom/_run
+
+      sudo chmod 777 /mnt
+      # Create the output directory
+      mkdir /mnt/fvcom
+      cd
+      git clone https://github.com/intel/opa-mpi-apps/
+      cd opa-mpi-apps/MpiApps/apps/imb/src
+      make CC=mpicc
+      cp IMB-MPI1 ~/fvcom/_run
+      #/usr/share/openmpi/mca-btl-openib-device-params.ini
+
+
+    args:
+      creates: ~/fvcom/_run/fvcom
+
+  - debug:
+      msg: "Hostnames : {{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join(',') }}"
+  - debug: 
+      msg: "Internal IP's : {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }}"
+  - debug: 
+      msg: "mpirun -host {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} ./fvcom --CASENAME=wvi_inlets4"
+
+
+  - name: Do science
+    become: yes
+    become_user: hpc
+    run_once: true
+    shell: |
+      cd
+      cd fvcom/_run
+      #export PATH=$PATH:/usr/lib64/openmpi/bin/    
+      #export I_MPI_FABRICS=shm:dapl
+      #export I_MPI_DYNAMIC_CONNECTION=0
+      #export I_MPI_DAPL_PROVIDER=ofa-v2-ib0
+      #export I_MPI_DEBUG=5
+      touch /mnt/fvcom/SAMPLEOUTPUT
+      echo "{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }}" > /mnt/fvcom/hostsline
+      #nohup mpirun -npernode `nproc` -hosts {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} ./fvcom --CASENAME=wvi_inlets4 > /mnt/fvcom/stdout.txt 2> /mnt/fvcom/stderr.txt &
+      #mpirun -ppn `npernode` -hosts {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} ./fvcom --CASENAME=wvi_inlets4 > /mnt/fvcom/stdout.txt 2> /mnt/fvcom/stderr.txt
+      #azcopy copy /mnt/fvcom \"{{ lookup('env','SAS_URL') }}\" --recursive
+      #mpirun -hosts 10.0.0.4,10.0.0.5 IMB-MPI1
+      # mpitune took 30 minutes. can tune the message sizes perhaps to trim it down, but best
+      # to save this
+      #mpitune --ppn-range 16 -hf hosts -fl shm:dapl -hr 2
