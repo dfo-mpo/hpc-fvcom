@@ -1,6 +1,6 @@
 variable instance_count {
 	description = "Defines the number of VMs to be provisioned."
-	default     = "1"
+	default     = "3"
 }
 variable app_name {
 	description = "Application Name"
@@ -120,15 +120,6 @@ resource "azurerm_virtual_machine" "vm" {
 		managed_disk_type = "StandardSSD_LRS"
 	}
 
-	# Optional data disks
-	#storage_data_disk {
-	#name              = "datadisk_new_${count.index}"
-	#managed_disk_type = "Standard_LRS"
-	#create_option     = "Empty"
-	#lun               = 0
-	#disk_size_gb      = "256"
-	#}
-
 	os_profile {
 		computer_name  = "hpc-${lower(var.app_name)}-vm${count.index+1}"
 		admin_username = "ansible"
@@ -141,7 +132,6 @@ resource "azurerm_virtual_machine" "vm" {
 			key_data = "${file("../ansible.key.pub")}"
 		}
 	}
-	
 }
 
 resource "null_resource" "prep_ansible" {

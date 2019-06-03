@@ -75,6 +75,14 @@
     become_user: hpc
     shell: 'azcopy copy "{{ lookup("env","SAS_URL") }}" ~/ --recursive=true'
 
+  - name: Create MPI Hosts file
+    become: yes
+    become_user: hpc
+    copy:
+      dest: "~/hosts"
+      content: "{{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join('\n') }}"
+
+
   - name: Compile
     become: yes
     become_user: hpc
@@ -85,8 +93,8 @@
       ./setup -a UBUNTU-18.04-GCC -c wvi_inlets4_heating
 
       make clean
-      make libs gotm fvcom -j `nproc`
-      make -j `nproc`
+      make libs gotm fvcom -j`nproc`
+      make -j`nproc`
       cd
       cp fvcom/FVCOM41/FVCOM_source/fvcom fvcom/_run
 
@@ -98,11 +106,17 @@
       cd opa-mpi-apps/MpiApps/apps/imb/src
       make CC=mpicc
       cp IMB-MPI1 ~/fvcom/_run
-      #/usr/share/openmpi/mca-btl-openib-device-params.ini
-
-
     args:
       creates: ~/fvcom/_run/fvcom
+
+  - name: update openib parameter file
+    become: yes
+    lineinfile:
+      path: /usr/share/openmpi/mca-btl-openib-device-params.ini
+      regexp: '^vendor_part_id = 4119,4121'
+      line: 'vendor_part_id = 4119,4120,4121'
+
+
 
   - debug:
       msg: "Hostnames : {{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join(',') }}"
@@ -111,6 +125,19 @@
   - debug: 
       msg: "mpirun -host {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} ./fvcom --CASENAME=wvi_inlets4"
 
+  - name: Tune Network
+    become: yes
+    become_user: hpc
+    shell: |
+      sysctl -w net.core.rmem_max=16777216
+      sysctl -w net.core.wmem_max=16777216
+      sysctl -w net.ipv4.tcp_rmem=4096 87380 16777216
+      sysctl -w net.ipv4.tcp_wmem=4096 65536 16777216
+      sysctl -w net.core.netdev_max_backlog=30000
+      sysctl -w net.core.rmem_default=16777216
+      sysctl -w net.core.wmem_default=16777216
+      sysctl -w net.ipv4.tcp_mem='16777216 16777216 16777216'
+      sysctl -w net.ipv4.route.flush=1
 
   - name: Do science
     become: yes
@@ -119,17 +146,16 @@
     shell: |
       cd
       cd fvcom/_run
-      #export PATH=$PATH:/usr/lib64/openmpi/bin/    
-      #export I_MPI_FABRICS=shm:dapl
-      #export I_MPI_DYNAMIC_CONNECTION=0
-      #export I_MPI_DAPL_PROVIDER=ofa-v2-ib0
-      #export I_MPI_DEBUG=5
-      touch /mnt/fvcom/SAMPLEOUTPUT
       echo "{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }}" > /mnt/fvcom/hostsline
       #nohup mpirun -npernode `nproc` -hosts {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} ./fvcom --CASENAME=wvi_inlets4 > /mnt/fvcom/stdout.txt 2> /mnt/fvcom/stderr.txt &
       #mpirun -ppn `npernode` -hosts {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} ./fvcom --CASENAME=wvi_inlets4 > /mnt/fvcom/stdout.txt 2> /mnt/fvcom/stderr.txt
       #azcopy copy /mnt/fvcom \"{{ lookup('env','SAS_URL') }}\" --recursive
-      #mpirun -hosts 10.0.0.4,10.0.0.5 IMB-MPI1
       # mpitune took 30 minutes. can tune the message sizes perhaps to trim it down, but best
       # to save this
       #mpitune --ppn-range 16 -hf hosts -fl shm:dapl -hr 2
+      #mpirun --mca btl self,tcp ./fvcom --CASENAME=wvi_inlets4
+      
+      ## Three nodes
+      #mpirun -N 44 --host 10.10.1.4:44,10.10.1.5:44,10.10.1.6:44 --mca btl_openib_verbose 9 --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+   #-bind-to-core|--bind-to-core   0.095 / 43
+   #-bind-to-socket|--bind-to-socket  0.098 / 43
