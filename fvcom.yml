@@ -58,7 +58,6 @@
       - htop
       - iptraf-ng
 
-
     
   - name: Install azcopy to /usr/bin
     become: yes
@@ -74,14 +73,15 @@
     become: yes
     become_user: hpc
     shell: 'azcopy copy "{{ lookup("env","SAS_URL") }}" ~/ --recursive=true'
+    args:
+      creates: ~/fvcom
 
   - name: Create MPI Hosts file
     become: yes
     become_user: hpc
     copy:
       dest: "~/hosts"
-      content: "{{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join('\n') }}"
-
+      content: "{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join('\n') }}"
 
   - name: Compile
     become: yes
@@ -89,12 +89,14 @@
     shell: |
       cd
       chmod -R 755 fvcom
+      sudo mkdir /mnt/fvcom &> /dev/null
+      sudo chmod 777 /mnt/fvcom &> /dev/null
       cd fvcom/FVCOM41/Configure/
-      ./setup -a UBUNTU-18.04-GCC -c wvi_inlets4_heating
+      ./setup -a UBUNTU-16.04-GCC -c wvi_inlets4_heating
 
       make clean
-      make libs gotm fvcom -j`nproc`
-      make -j`nproc`
+      make libs gotm fvcom -j $(($(nproc)-1))
+      make -j $(($(nproc)-1))
       cd
       cp fvcom/FVCOM41/FVCOM_source/fvcom fvcom/_run
 
@@ -115,15 +117,6 @@
       path: /usr/share/openmpi/mca-btl-openib-device-params.ini
       regexp: '^vendor_part_id = 4119,4121'
       line: 'vendor_part_id = 4119,4120,4121'
-
-
-
-  - debug:
-      msg: "Hostnames : {{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join(',') }}"
-  - debug: 
-      msg: "Internal IP's : {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }}"
-  - debug: 
-      msg: "mpirun -host {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} ./fvcom --CASENAME=wvi_inlets4"
 
   - name: Tune Network
     become: yes
@@ -146,7 +139,8 @@
     shell: |
       cd
       cd fvcom/_run
-      echo "{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }}" > /mnt/fvcom/hostsline
+      
+      #echo "{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }}" > /mnt/fvcom/hostsline
       #nohup mpirun -npernode `nproc` -hosts {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} ./fvcom --CASENAME=wvi_inlets4 > /mnt/fvcom/stdout.txt 2> /mnt/fvcom/stderr.txt &
       #mpirun -ppn `npernode` -hosts {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} ./fvcom --CASENAME=wvi_inlets4 > /mnt/fvcom/stdout.txt 2> /mnt/fvcom/stderr.txt
       #azcopy copy /mnt/fvcom \"{{ lookup('env','SAS_URL') }}\" --recursive
@@ -155,7 +149,26 @@
       #mpitune --ppn-range 16 -hf hosts -fl shm:dapl -hr 2
       #mpirun --mca btl self,tcp ./fvcom --CASENAME=wvi_inlets4
       
-      ## Three nodes
-      #mpirun -N 44 --host 10.10.1.4:44,10.10.1.5:44,10.10.1.6:44 --mca btl_openib_verbose 9 --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
-   #-bind-to-core|--bind-to-core   0.095 / 43
-   #-bind-to-socket|--bind-to-socket  0.098 / 43
+      ## Y-nodes using host file, using only physical cores
+      # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      
+      # Bind options
+      # --bind-to numa
+      # --bind-to core
+      # --bind-to socket
+      
+      # f16 - scaling is perfect with 1node vs 2node. --oversubscribe helps a little bit, not much.
+      
+      # mpirun -N 32 --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+
+
+      # 8 nodes, f64
+      # no parameters, 0.06
+      # bind to NUMA, 0.058
+      # bind to CORE, 0.61
+      # bind to SOCKET , 0.61
+
+      # 2 nodes, f72
+      # no params, 0.072
+      # bind to NUMA, 0.072

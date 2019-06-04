@@ -1,6 +1,6 @@
 variable instance_count {
 	description = "Defines the number of VMs to be provisioned."
-	default     = "3"
+	default     = "2"
 }
 variable app_name {
 	description = "Application Name"
@@ -14,11 +14,15 @@ variable location {
 
 variable instance_size {
 	description = "Size of the instance"
-	#default = "Standard_B2ms"
-	#default = "Standard_F64s_v2"
 	#default = "Standard_F4s_v2"
+	#default = "Standard_F8s_v2"
+	#default = "Standard_F16s_v2"
+	#default = "Standard_F32s_v2"
+	#default = "Standard_F64s_v2"
+	default = "Standard_F72s_v2"
+	#default = "Standard_B2ms"
 	#default = "Standard_H16r"
-	default = "Standard_Hc44rs"
+	#default = "Standard_Hc44rs"
 	#default = "Standard_Hb60rs"
 }
 
@@ -29,12 +33,11 @@ variable accelerated {
 				"Standard_F16s_v2",
 				"Standard_F32s_v2",
 				"Standard_F64s_v2",
+				"Standard_F72s_v2",
 				#"Standard_Hc44rs",
 				#"Standard_Hb60rs"
 			]
 }
-
-
 
 resource "azurerm_resource_group" "RG" {  
 	name     = "HPC-${upper(var.app_name)}-RG"
@@ -111,7 +114,6 @@ resource "azurerm_virtual_machine" "vm" {
 		sku       = "18.04-LTS"
 		version   = "latest"
 	}
-
 
 	storage_os_disk {
 		name              = "osdisk${count.index+1}"
