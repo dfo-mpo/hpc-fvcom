@@ -17,14 +17,14 @@
   - name: DPDK Files
     become: yes
     unarchive:
-      src: https://fast.dpdk.org/rel/dpdk-18.05.1.tar.xz
+      src: https://fast.dpdk.org/rel/dpdk-19.05.tar.xz
       dest: ~/
       remote_src: yes
 
   - name: Compile DPDK
     become: yes
     shell: |
-      cd /root/dpdk-stable-18.05.1
+      cd /root/dpdk-stable-19.05
       make config T=x86_64-native-linuxapp-gcc
       sed -ri 's,(MLX._PMD=)n,\1y,' build/.config
       make -j

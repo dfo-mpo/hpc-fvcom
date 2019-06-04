@@ -139,19 +139,12 @@
     shell: |
       cd
       cd fvcom/_run
-      
-      #echo "{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }}" > /mnt/fvcom/hostsline
-      #nohup mpirun -npernode `nproc` -hosts {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} ./fvcom --CASENAME=wvi_inlets4 > /mnt/fvcom/stdout.txt 2> /mnt/fvcom/stderr.txt &
-      #mpirun -ppn `npernode` -hosts {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} ./fvcom --CASENAME=wvi_inlets4 > /mnt/fvcom/stdout.txt 2> /mnt/fvcom/stderr.txt
-      #azcopy copy /mnt/fvcom \"{{ lookup('env','SAS_URL') }}\" --recursive
-      # mpitune took 30 minutes. can tune the message sizes perhaps to trim it down, but best
-      # to save this
-      #mpitune --ppn-range 16 -hf hosts -fl shm:dapl -hr 2
-      #mpirun --mca btl self,tcp ./fvcom --CASENAME=wvi_inlets4
-      
-      ## Y-nodes using host file, using only physical cores
+      # This one cuts in half (F* series)
       # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
       
+      # Run all cores (Hc44rs)
+      # mpirun -N $(nproc) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+
       # Bind options
       # --bind-to numa
       # --bind-to core
@@ -172,3 +165,6 @@
       # 2 nodes, f72
       # no params, 0.072
       # bind to NUMA, 0.072
+
+      # 2 nodes, hc44rs, tcp
+      # bind to NUMA, 0.082
