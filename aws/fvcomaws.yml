@@ -1,0 +1,68 @@
+- name: Setup base hpc
+  hosts: all
+  gather_facts: true
+  tasks:
+  - name: Add user hpc
+    become: yes
+    user:
+      name: hpc
+      shell: /bin/bash
+
+  - name: Set SSH key
+    become: yes
+    authorized_key:
+      user: hpc
+      state: present
+      key: "{{ lookup('file', '~/hpc.key.pub') }}"
+
+  - name: Distribute private keyfiles to hosts
+    become: yes
+    become_user: hpc
+    copy: 
+      src: "~/hpc.key"
+      dest: "/home/hpc/.ssh/id_dsa" 
+      mode: 0600
+
+  - name: Add hpc to sudoers
+    become: yes
+    copy:
+      dest: "/etc/sudoers.d/devops"
+      content: "hpc  ALL=(ALL)  NOPASSWD: ALL"
+
+  - name: Disable host SSH key checking
+    become: yes
+    become_user: hpc
+    copy:
+      dest: "~/.ssh/config"
+      content: "Host *\n    StrictHostKeyChecking no\n"
+
+  - name: Prepare
+    become: yes
+    become_user: hpc
+    shell: |
+      sudo mkdir /mnt
+      sudo mkdir /mnt/fvcom
+      sudo chmod 777 -R /mnt/fvcom/
+
+  - debug:
+      msg: "Hostnames : {{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join(',') }}"
+  - debug: 
+      msg: "Internal IP's : {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }}"
+  - debug: 
+      msg: "mpirun -hosts {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} IMB-MPI1"
+
+
+  - name: Do science
+    become: yes
+    become_user: hpc
+    run_once: true
+    shell: |
+      #export OMPI_MCA_pml=cm 
+      export OMPI_MCA_btl=self,vader,tcp
+      export NCDFDIR=/opt/netcdf-4.7.0
+      export NCDFFDIR=/opt/netcdf-fortran-4.4.5
+      export OMPIDIR=/opt/openmpi-4.0.1
+      export LD_LIBRARY_PATH=${OMPIDIR}/lib:${NCDFDIR}/lib:${NCDFFDIR}/lib:${LD_LIBRARY_PATH}:/opt/amazon/efa/lib64
+      cd fvcom/_run
+      #mpirun --bind-to core ./fvcom --CASENAME=wvi_inlets4
+
