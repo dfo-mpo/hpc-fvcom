@@ -22,6 +22,7 @@ variable app_name {
 
 variable "instance_type" {
     default = "c5n.18xlarge"
+    #default = "c5.xlarge"
 }
 
 variable "aws_region" {
@@ -30,18 +31,18 @@ variable "aws_region" {
 
 resource "aws_key_pair" "hpc" {
     key_name   = "hpc"
-    public_key = "${file("../../hpc-aws.key.pub")}"
+    public_key = "${file("~/hpc-aws.key.pub")}"
 }
 
 resource "aws_instance" "vm" {
-    count         = "${var.instance_count}"
-    #ami           = "ami-0e8543553d836774e"
-    ami         = "${data.aws_ami.aws-linux-2.id}"
-    instance_type = "${var.instance_type}"
-    key_name      = "${aws_key_pair.hpc.key_name}"
-    vpc_security_group_ids = [ "sg-0beee46423a9746a2" ]
-    placement_group = "cluster"
-    
+    count                   = "${var.instance_count}"
+    #ami                    = "ami-0e8543553d836774e"
+    #ami                    = "${data.aws_ami.aws-linux-2.id}"
+    ami                     = "ami-024a64a6685d05041"   # Ubuntu 18.04LTS
+    instance_type           = "${var.instance_type}"
+    key_name                = "${aws_key_pair.hpc.key_name}"
+    vpc_security_group_ids  = [ "sg-0beee46423a9746a2" ]
+    placement_group         = "cluster"
 }
 
 
