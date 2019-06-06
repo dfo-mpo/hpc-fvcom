@@ -8,7 +8,7 @@ cd
 
 
 # Get stuff
-sudo yum -y install git gcc gcc-c++ patch make cmake autoconf flex automake pkgconfig rpm-build kernel-devel-$(uname -r) libibverbs libibverbs-utils libfabric libfabric-devel rdma-core rdma-core-devel librdmacm-utils numactl numactl-devel numactl-libs gcc-gfortran libgfortran htop
+sudo yum -y install git gcc gcc-c++ patch make cmake autoconf flex automake pkgconfig rpm-build libibverbs libibverbs-utils libfabric libfabric-devel rdma-core rdma-core-devel librdmacm-utils numactl numactl-devel numactl-libs gcc-gfortran libgfortran htop kernel-devel-$(uname -r)
 sudo amazon-linux-extras install epel -y
 sudo yum -y install hdf5-devel zlib-devel curl-devel
 
@@ -84,6 +84,8 @@ cd
 cp fvcom/FVCOM41/FVCOM_source/fvcom fvcom/_run
 
 
+echo '/opt/openmpi-4.0.1/lib:/opt/netcdf-fortran-4.4.5/lib:/opt/openmpi-4.0.1/lib' | sudo tee -a /etc/ld.so.conf.d/ompi.conf
+sudo chmod +x /etc/ld.so.conf.d/ompi.conf
 
 # /etc/ld.so.conf.d
 # TODO:  Using /etc/ld.so.conf.d make it so you don't have to do the exports below

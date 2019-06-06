@@ -51,6 +51,9 @@
       sudo mkdir /mnt/fvcom
       sudo chmod 777 -R /mnt/fvcom/
       sudo chmod 777 -R /home/ec2-user
+      cd
+      sudo mv /home/ec2-user/fvcom /home/hpc
+
 
 #  - debug:
 #      msg: "Hostnames : {{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join(',') }}"
@@ -66,12 +69,13 @@
     run_once: true
     shell: |
       #export OMPI_MCA_pml=cm 
-      export OMPI_MCA_btl=self,vader,tcp
-      export NCDFDIR=/opt/netcdf-4.7.0
-      export NCDFFDIR=/opt/netcdf-fortran-4.4.5
-      export OMPIDIR=/opt/openmpi-4.0.1
-      export LD_LIBRARY_PATH=${OMPIDIR}/lib:${NCDFDIR}/lib:${NCDFFDIR}/lib:${LD_LIBRARY_PATH}:/opt/amazon/efa/lib64
+      #export OMPI_MCA_btl=self,vader,tcp
+      #export NCDFDIR=/opt/netcdf-4.7.0
+      #export NCDFFDIR=/opt/netcdf-fortran-4.4.5
+      #export OMPIDIR=/opt/openmpi-4.0.1
+      #export LD_LIBRARY_PATH=${OMPIDIR}/lib:${NCDFDIR}/lib:${NCDFFDIR}/lib:${LD_LIBRARY_PATH}:/opt/amazon/efa/lib64
       cd fvcom/_run
-      #mpirun --bind-to core ./fvcom --CASENAME=wvi_inlets4
+      
+      #mpirun --bind-to core --mca btl self,vader,tcp -x LD_LIBRARY_PATH=/opt/netcdf-fortran-4.4.5/lib:/opt/netcdf-4.7.0/lib/:/opt/amazon/efa/lib64/:${LD_LIBRARY_PATH} ./fvcom --CASENAME=wvi_inlets4
       #mpirun --bind-to core /home/ec2-user/fvcom/_run/fvcom --CASENAME=wvi_inlets4
 
