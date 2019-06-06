@@ -85,6 +85,10 @@ cp fvcom/FVCOM41/FVCOM_source/fvcom fvcom/_run
 
 
 
+# /etc/ld.so.conf.d
+# TODO:  Using /etc/ld.so.conf.d make it so you don't have to do the exports below
+
+
 # Runtime
 sudo mkdir /mnt
 sudo mkdir /mnt/fvcom

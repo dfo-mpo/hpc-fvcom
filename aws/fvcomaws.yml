@@ -36,6 +36,13 @@
       dest: "~/.ssh/config"
       content: "Host *\n    StrictHostKeyChecking no\n"
 
+  - name: Create MPI Hosts file
+    become: yes
+    become_user: hpc
+    copy:
+      dest: "~/hosts"
+      content: "{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join('\n') }}"
+
   - name: Prepare
     become: yes
     become_user: hpc
@@ -43,13 +50,14 @@
       sudo mkdir /mnt
       sudo mkdir /mnt/fvcom
       sudo chmod 777 -R /mnt/fvcom/
+      sudo chmod 777 -R /home/ec2-user
 
-  - debug:
-      msg: "Hostnames : {{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join(',') }}"
-  - debug: 
-      msg: "Internal IP's : {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }}"
-  - debug: 
-      msg: "mpirun -hosts {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} IMB-MPI1"
+#  - debug:
+#      msg: "Hostnames : {{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join(',') }}"
+#  - debug: 
+#      msg: "Internal IP's : {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }}"
+#  - debug: 
+#      msg: "mpirun -hosts {{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }} IMB-MPI1"
 
 
   - name: Do science
@@ -65,4 +73,5 @@
       export LD_LIBRARY_PATH=${OMPIDIR}/lib:${NCDFDIR}/lib:${NCDFFDIR}/lib:${LD_LIBRARY_PATH}:/opt/amazon/efa/lib64
       cd fvcom/_run
       #mpirun --bind-to core ./fvcom --CASENAME=wvi_inlets4
+      #mpirun --bind-to core /home/ec2-user/fvcom/_run/fvcom --CASENAME=wvi_inlets4
 
