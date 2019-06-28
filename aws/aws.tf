@@ -1,13 +1,3 @@
-data "aws_ami" "aws-linux-2" {
-    most_recent = true
-    owners = ["amazon"]
-
-    filter {
-        name   = "name"
-        values = ["amzn2-ami-hvm*x86*"]
-    }
-}
-
 provider "aws" {
     region  = "us-east-1"
 }
@@ -35,8 +25,6 @@ resource "aws_key_pair" "hpc" {
 
 resource "aws_instance" "vm" {
     count                   = "${var.instance_count}"
-    #ami                    = "ami-0e8543553d836774e"
-    #ami                    = "${data.aws_ami.aws-linux-2.id}"
     ami                     = "ami-024a64a6685d05041"   # Ubuntu 18.04LTS
     instance_type           = "${var.instance_type}"
     key_name                = "${aws_key_pair.hpc.key_name}"
