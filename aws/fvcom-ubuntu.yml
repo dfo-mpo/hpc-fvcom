@@ -43,6 +43,7 @@
       update_cache: yes
     vars:
       packages:
+      - awscli
       - cmake
       - git
       - makedepf90
@@ -59,21 +60,15 @@
       - htop
       - iptraf-ng
 
-    
-  - name: Install azcopy to /usr/bin
-    become: yes
-    unarchive:
-      src: https://aka.ms/downloadazcopy-v10-linux
-      dest: /usr/bin
-      creates: /usr/bin/azcopy
-      remote_src: yes
-      extra_opts: [--strip-components=1]
-    retries: 3
 
-  - name: Download blob
+  - name: Download data from S3
     become: yes
     become_user: hpc
-    shell: 'azcopy copy "{{ lookup("env","SAS_URL") }}" ~/ --recursive=true'
+    shell: |
+      aws configure set aws_access_key_id "{{ lookup("env","AWS_ACCESS_KEY_ID") }}"
+      aws configure set aws_secret_access_key "{{ lookup("env","AWS_SECRET_ACCESS_KEY") }}"
+      aws configure set region "{{ lookup("env","AWS_DEFAULT_REGION") }}"
+      aws s3 cp s3://dfohpc/fvcom ~/fvcom --recursive --quiet
     args:
       creates: ~/fvcom
 
@@ -90,6 +85,7 @@
     shell: |
       cd
       chmod -R 755 fvcom
+      sudo chmod 777 -R ~/fvcom
       sudo mkdir /mnt &> /dev/null
       sudo mkdir /mnt/fvcom &> /dev/null
       sudo chmod 777 -R /mnt/fvcom &> /dev/null
