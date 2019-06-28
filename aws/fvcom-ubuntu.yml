@@ -1,5 +1,6 @@
-- name: Setup base hpc
+- name: AWS(Ubuntu) FVCOM
   hosts: all
+  
   gather_facts: true
   tasks:
   - name: Add user hpc
@@ -136,6 +137,10 @@
     shell: |
       cd
       cd fvcom/_run
+
+      # SINGLE HOST TEST
+      # mpirun --bind-to core --mca btl self,vader ./fvcom --CASENAME=wvi_inlets4
+
       # This one cuts in half (F* series)
       # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
       

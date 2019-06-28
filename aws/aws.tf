@@ -15,16 +15,13 @@ variable instance_count {
 	description = "Defines the number of VMs to be provisioned."
 	default     = "1"
 }
-variable app_name {
-	description = "Application Name"
-	default = "FVCOM"
-}
 
 variable "instance_type" {
     #default = "c5n.18xlarge"
-    #default = "c5.xlarge"
+    default = "c5.xlarge"
+    #default = "c5.24xlarge"
     #default = "c5.metal"
-    default = "m4.large"
+    #default = "m4.large"
 }
 
 variable "aws_region" {
