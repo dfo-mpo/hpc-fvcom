@@ -7,8 +7,8 @@ variable instance_count {
 }
 
 variable "instance_type" {
-    #default = "c5n.18xlarge"
-    default = "c5.xlarge"
+    default = "c5n.18xlarge"
+    #default = "c5.xlarge"
     #default = "c5.24xlarge"
     #default = "c5.metal"
     #default = "m4.large"

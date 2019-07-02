@@ -1,0 +1,36 @@
+Notes for trying to run Ubuntu 18.04 with apt packages
+------------------------------------------------------
+0. check that ssh key exists ~/hpc-aws.key and ~/hpc.key (and matching public keys)
+1. edit aws.tf and set your instance type (c5n.18xl for EFA testing)
+2. instance count to 1 or 2 depending on the testing
+3. terraform apply
+4. ansible-playbook fvcom-ubuntu.yml
+5. ssh -i ~/hpc.key hpc@3.92.92.20
+6. cd fvcom/_run
+7. mpirun --bind-to core IMB-MPI1 pingpong
+        This will work. 
+Gotcha 1) OpenMPI is v2.x, not supported by EFA.
+
+8.  wget https://s3-us-west-2.amazonaws.com/aws-efa-installer/aws-efa-installer-latest.tar.gz
+    tar -xf aws-efa-installer-latest.tar.gz
+    cd aws-efa-installer
+    sudo ./efa_installer.sh -y
+
+Gotcha 2) Trying to install EFA after we've installed some libraries with apt will generate errors.
+    #########
+    DKMS: install completed.
+    Setting up libfabric-bin (1.7.0amzn1.1) ...
+    dpkg: dependency problems prevent configuration of libfabric-dev:
+    libfabric-dev depends on libfabric1 (= 1.7.0amzn1.1); however:
+    Version of libfabric1 on system is 1.5.3-1.
+
+    dpkg: error processing package libfabric-dev (--install):
+    dependency problems - leaving unconfigured
+    Setting up openmpi (3.1.4) ...
+    Processing triggers for libc-bin (2.27-3ubuntu1) ...
+    Errors were encountered while processing:
+    libfabric-dev
+    Error: Failed to install packages.
+    Error: failed to install EFA packages, exiting
+    #########
+
