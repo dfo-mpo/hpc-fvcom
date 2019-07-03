@@ -1,0 +1,148 @@
+- name: AWS(Ubuntu) FVCOM
+  hosts: all
+  
+  gather_facts: true
+  tasks:
+  - name: Add user hpc
+    become: yes
+    user:
+      name: hpc
+      shell: /bin/bash
+
+  - name: Set SSH key
+    become: yes
+    authorized_key:
+      user: hpc
+      state: present
+      key: "{{ lookup('file', '~/hpc.key.pub') }}"
+
+  - name: Distribute private keyfiles to hosts
+    become: yes
+    become_user: hpc
+    copy: 
+      src: "~/hpc.key"
+      dest: "/home/hpc/.ssh/id_dsa" 
+      mode: 0600
+
+  - name: Add hpc to sudoers
+    become: yes
+    copy:
+      dest: "/etc/sudoers.d/devops"
+      content: "hpc  ALL=(ALL)  NOPASSWD: ALL"
+
+  - name: Disable host SSH key checking
+    become: yes
+    become_user: hpc
+    copy:
+      dest: "~/.ssh/config"
+      content: "Host *\n    StrictHostKeyChecking no\n"
+
+  - name: Download data from S3
+    become: yes
+    become_user: hpc
+    shell: |
+      aws configure set aws_access_key_id "{{ lookup("env","AWS_ACCESS_KEY_ID") }}"
+      aws configure set aws_secret_access_key "{{ lookup("env","AWS_SECRET_ACCESS_KEY") }}"
+      aws configure set region "{{ lookup("env","AWS_DEFAULT_REGION") }}"
+      aws s3 cp s3://dfohpc/fvcom ~/fvcom --recursive --quiet
+    args:
+      creates: ~/fvcom
+
+  - name: Create MPI Hosts file
+    become: yes
+    become_user: hpc
+    copy:
+      dest: "~/hosts"
+      content: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join('\n') }}"
+
+  - name: Compile
+    become: yes
+    become_user: hpc
+    shell: |
+      cd
+      chmod -R 755 fvcom
+      sudo chmod 777 -R ~/fvcom
+      sudo mkdir /mnt &> /dev/null
+      sudo mkdir /mnt/fvcom &> /dev/null
+      sudo chmod 777 -R /mnt/fvcom &> /dev/null
+      sudo chmod 777 -R /mnt
+      cd fvcom/FVCOM41/Configure/
+      ./setup -a UBUNTU-18.04-GCC -c wvi_inlets4_heating
+
+      make clean
+      make libs gotm fvcom -j $(($(nproc)-1))
+      make -j $(($(nproc)-1))
+      cd
+      cp fvcom/FVCOM41/FVCOM_source/fvcom fvcom/_run
+      
+      # Create the output directory
+      cd
+      git clone https://github.com/intel/opa-mpi-apps/
+      cd opa-mpi-apps/MpiApps/apps/imb/src
+      make CC=mpicc
+      cp IMB-MPI1 ~/fvcom/_run
+    args:
+      creates: ~/fvcom/_run/fvcom
+
+  #- name: update openib parameter file
+  #  become: yes
+  #  lineinfile:
+  #    path: /usr/share/openmpi/mca-btl-openib-device-params.ini
+  #    regexp: '^vendor_part_id = 4119,4121'
+  #    line: 'vendor_part_id = 4119,4120,4121'
+
+  - name: Tune Network
+    become: yes
+    become_user: hpc
+    shell: |
+      sysctl -w net.core.rmem_max=2147483647
+      sysctl -w net.core.wmem_max=2147483647
+      sysctl -w net.ipv4.tcp_rmem=4096 87380 2147483647
+      sysctl -w net.ipv4.tcp_wmem=4096 65536 2147483647
+      #sysctl -w net.core.netdev_max_backlog=30000
+      sysctl -w net.core.rmem_default=16777216
+      sysctl -w net.core.wmem_default=16777216
+      sysctl -w net.ipv4.tcp_mem='16777216 16777216 16777216'
+      sysctl -w net.ipv4.route.flush=1
+
+  - name: Do science
+    become: yes
+    become_user: hpc
+    run_once: true
+    shell: |
+      cd
+      cd fvcom/_run
+
+      # SINGLE HOST TEST
+      # mpirun --bind-to core --mca btl self,vader ./fvcom --CASENAME=wvi_inlets4
+
+      # This one cuts in half (F* series)
+      # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      
+      # Run all cores (Hc44rs)
+      # mpirun -N $(nproc) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+
+      # Bind options
+      # --bind-to numa
+      # --bind-to core
+      # --bind-to socket
+      
+      # f16 - scaling is perfect with 1node vs 2node. --oversubscribe helps a little bit, not much.
+      
+      # mpirun -N 32 --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      # mpirun --bind-to numa --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      # mpirun --bind-to core --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+
+      # 8 nodes, f64
+      # no parameters, 0.06
+      # bind to NUMA, 0.058
+      # bind to CORE, 0.61
+      # bind to SOCKET , 0.61
+
+      # 2 nodes, f72
+      # no params, 0.072
+      # bind to NUMA, 0.072
+
+      # 2 nodes, hc44rs, tcp
+      # bind to NUMA, 0.082

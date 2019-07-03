@@ -3,13 +3,13 @@ provider "aws" {
 }
 variable instance_count {
 	description = "Defines the number of VMs to be provisioned."
-	default     = "1"
+	default     = "2"
 }
 
 variable "instance_type" {
-    #default = "c5n.18xlarge"
+    default = "c5n.18xlarge"
     #default = "c5.xlarge"
-    default = "c5.18xlarge"
+    #default = "c5.18xlarge"
     #default = "c5.24xlarge"
     #default = "c5.metal"
     #default = "m4.large"
@@ -26,11 +26,17 @@ resource "aws_key_pair" "hpc" {
 
 resource "aws_instance" "vm" {
     count                   = "${var.instance_count}"
-    ami                     = "ami-024a64a6685d05041"   # Ubuntu 18.04LTS
+    #ami                     = "ami-024a64a6685d05041"   # Ubuntu 18.04LTS
+    ami                     = "ami-00213cf1aa442f159"    # Packer-HPC
     instance_type           = "${var.instance_type}"
     key_name                = "${aws_key_pair.hpc.key_name}"
     vpc_security_group_ids  = [ "sg-0beee46423a9746a2" ]
     placement_group         = "cluster"
+    root_block_device {
+        volume_type = "gp2"
+        volume_size = 128
+    }
+
 }
 
 
