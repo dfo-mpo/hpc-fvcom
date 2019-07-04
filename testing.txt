@@ -1,0 +1,36 @@
+      cd
+      cd fvcom/_run
+
+      # SINGLE HOST TEST
+      # mpirun --bind-to core --mca btl self,vader ./fvcom --CASENAME=wvi_inlets4
+
+      # This one cuts in half (F* series)
+      # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      
+      # Run all cores (Hc44rs)
+      # mpirun -N $(nproc) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+
+      # Bind options
+      # --bind-to numa
+      # --bind-to core
+      # --bind-to socket
+      
+      # f16 - scaling is perfect with 1node vs 2node. --oversubscribe helps a little bit, not much.
+      
+      # mpirun -N 32 --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      # mpirun --bind-to numa --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      # mpirun --bind-to core --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+
+      # 8 nodes, f64
+      # no parameters, 0.06
+      # bind to NUMA, 0.058
+      # bind to CORE, 0.61
+      # bind to SOCKET , 0.61
+
+      # 2 nodes, f72
+      # no params, 0.072
+      # bind to NUMA, 0.072
+
+      # 2 nodes, hc44rs, tcp
+      # bind to NUMA, 0.082

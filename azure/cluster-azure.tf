@@ -28,7 +28,8 @@ variable "instance_size" {
 
 variable "accelerated" {
   description = "List of accelerated instance sizes"
-  default = ["Standard_F4s_v2",
+  default = [
+    "Standard_F4s_v2",
     "Standard_F8s_v2",
     "Standard_F16s_v2",
     "Standard_F32s_v2",
@@ -41,7 +42,7 @@ variable "accelerated" {
 
 resource "azurerm_resource_group" "RG" {
   name     = "HPC-${upper(var.app_name)}-RG"
-  location = "${var.resource_location}"
+  location = var.resource_location
 }
 
 # Use existing HPC-Network resource group
@@ -99,7 +100,7 @@ resource "azurerm_virtual_machine" "vm" {
   location              = azurerm_resource_group.RG.location
   availability_set_id   = azurerm_availability_set.avset.id
   resource_group_name   = azurerm_resource_group.RG.name
-  network_interface_ids = ["${element(azurerm_network_interface.vnic.*.id, count.index)}"]
+  network_interface_ids = [element(azurerm_network_interface.vnic.*.id, count.index)]
   vm_size               = var.instance_size
 
   # Uncomment this line to delete the OS disk automatically when deleting the VM
@@ -125,14 +126,14 @@ resource "azurerm_virtual_machine" "vm" {
 
   os_profile {
     computer_name  = "hpc-${lower(var.app_name)}-vm${count.index + 1}"
-    admin_username = "ansible"
+    admin_username = "ubuntu"
   }
   os_profile_linux_config {
     disable_password_authentication = "true"
 
     ssh_keys {
-      path     = "/home/ansible/.ssh/authorized_keys"
-      key_data = "${file("../ansible.key.pub")}"
+      path     = "/home/ubuntu/.ssh/authorized_keys"
+      key_data = "${file("~/ubuntu.key.pub")}"
     }
   }
 }

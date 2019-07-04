@@ -1,5 +1,6 @@
-- name: Setup base hpc
+- name: AWS(Ubuntu) FVCOM
   hosts: all
+  
   gather_facts: true
   tasks:
   - name: Add user hpc
@@ -36,39 +37,6 @@
       dest: "~/.ssh/config"
       content: "Host *\n    StrictHostKeyChecking no\n"
 
-  - name: Install packages for compilation
-    become: yes
-    apt:
-      name: "{{ packages }}"
-    vars:
-      packages:
-      - cmake
-      - git
-      - makedepf90
-      - gfortran
-      - gcc
-      - libnetcdf-dev
-      - libnetcdff-dev
-      - netcdf-bin
-      - openmpi-bin
-      - openmpi-common
-      - libopenmpi-dev
-      - libhdf5-openmpi-dev
-      - patch
-      - htop
-      - iptraf-ng
-
-    
-  - name: Install azcopy to /usr/bin
-    become: yes
-    unarchive:
-      src: https://aka.ms/downloadazcopy-v10-linux
-      dest: /usr/bin
-      creates: /usr/bin/azcopy
-      remote_src: yes
-      extra_opts: [--strip-components=1]
-    retries: 3
-
   - name: Download blob
     become: yes
     become_user: hpc
@@ -81,7 +49,7 @@
     become_user: hpc
     copy:
       dest: "~/hosts"
-      content: "{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join('\n') }}"
+      content: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join('\n') }}"
 
   - name: Compile
     become: yes
@@ -89,20 +57,23 @@
     shell: |
       cd
       chmod -R 755 fvcom
+      sudo chmod 777 -R ~/fvcom
+      sudo mkdir /mnt &> /dev/null
       sudo mkdir /mnt/fvcom &> /dev/null
-      sudo chmod 777 /mnt/fvcom &> /dev/null
+      sudo chmod 777 -R /mnt/fvcom &> /dev/null
+      sudo chmod 777 -R /mnt
       cd fvcom/FVCOM41/Configure/
-      ./setup -a UBUNTU-16.04-GCC -c wvi_inlets4_heating
+      ./setup -a UBUNTU-18.04-GCC -c wvi_inlets4_heating
 
       make clean
-      make libs gotm fvcom -j $(($(nproc)-1))
-      make -j $(($(nproc)-1))
+      make libs -j
+      make gotm -j
+      make fvcom -j
+      make -j
       cd
       cp fvcom/FVCOM41/FVCOM_source/fvcom fvcom/_run
-
-      sudo chmod 777 /mnt
+      
       # Create the output directory
-      mkdir /mnt/fvcom
       cd
       git clone https://github.com/intel/opa-mpi-apps/
       cd opa-mpi-apps/MpiApps/apps/imb/src
@@ -111,22 +82,22 @@
     args:
       creates: ~/fvcom/_run/fvcom
 
-  - name: update openib parameter file
-    become: yes
-    lineinfile:
-      path: /usr/share/openmpi/mca-btl-openib-device-params.ini
-      regexp: '^vendor_part_id = 4119,4121'
-      line: 'vendor_part_id = 4119,4120,4121'
+  #- name: update openib parameter file
+  #  become: yes
+  #  lineinfile:
+  #    path: /usr/share/openmpi/mca-btl-openib-device-params.ini
+  #    regexp: '^vendor_part_id = 4119,4121'
+  #    line: 'vendor_part_id = 4119,4120,4121'
 
   - name: Tune Network
     become: yes
     become_user: hpc
     shell: |
-      sysctl -w net.core.rmem_max=16777216
-      sysctl -w net.core.wmem_max=16777216
-      sysctl -w net.ipv4.tcp_rmem=4096 87380 16777216
-      sysctl -w net.ipv4.tcp_wmem=4096 65536 16777216
-      sysctl -w net.core.netdev_max_backlog=30000
+      sysctl -w net.core.rmem_max=2147483647
+      sysctl -w net.core.wmem_max=2147483647
+      sysctl -w net.ipv4.tcp_rmem=4096 87380 2147483647
+      sysctl -w net.ipv4.tcp_wmem=4096 65536 2147483647
+      #sysctl -w net.core.netdev_max_backlog=30000
       sysctl -w net.core.rmem_default=16777216
       sysctl -w net.core.wmem_default=16777216
       sysctl -w net.ipv4.tcp_mem='16777216 16777216 16777216'
@@ -139,6 +110,10 @@
     shell: |
       cd
       cd fvcom/_run
+
+      # SINGLE HOST TEST
+      # mpirun --bind-to core --mca btl self,vader ./fvcom --CASENAME=wvi_inlets4
+
       # This one cuts in half (F* series)
       # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
       
@@ -154,7 +129,8 @@
       
       # mpirun -N 32 --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
       # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
-
+      # mpirun --bind-to numa --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      # mpirun --bind-to core --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
 
       # 8 nodes, f64
       # no parameters, 0.06

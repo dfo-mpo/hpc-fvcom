@@ -16,11 +16,7 @@ sudo apt update
 export DEBIAN_FRONTEND=noninteractive
 sudo apt -y install cmake git makedepf90 gfortran gcc patch htop iptraf-ng zlib1g-dev libcurl4-openssl-dev pkg-config git gcc gcc-opt cmake patch autoconf flex doxygen texlive-latex-base librdmacm-dev libnuma-dev
 sudo apt -y install nvidia-cuda-dev
-
 sudo apt -y install libfabric-dev # Not needed if EFA is installed, fails gracefully
-
-# AzCopy Install
-wget --content-disposition https://aka.ms/downloadazcopy-v10-linux && tar zxvf azcopy_linux_amd64_*.tar.gz && sudo cp azcopy_linux_amd64*/azcopy /usr/local/bin/
 
 # AWS CLI Install
 sudo apt -y install awscli
@@ -29,7 +25,7 @@ sudo apt -y install awscli
 # Make OpenUCX - (c5.18xl 22sec)
 wget https://github.com/openucx/ucx/releases/download/v1.5.1/ucx-1.5.1.tar.gz && tar xzf ucx-1.5.1.tar.gz && cd ucx-1.5.1
 ./contrib/configure-release --prefix=/usr
-make -j && make check && sudo make install
+make -j && sudo make install
 cd
 
 # Make OpenMPI - (c5.18xl 3m30s)
@@ -38,8 +34,7 @@ wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz &&
 ./configure --prefix=/usr --enable-static --enable-shared --with-cuda=/usr/include --with-libfabric=/opt/amazon/efa
 # Other
 #./configure --prefix=/usr --enable-static --enable-shared --with-cuda=/usr/include
-
-make all -j && make check && sudo make install
+make all -j && sudo make install
 cd
 
 # HDF5 (c5.18xl 51s)

@@ -70,8 +70,10 @@
       ./setup -a UBUNTU-18.04-GCC -c wvi_inlets4_heating
 
       make clean
-      make libs gotm fvcom -j $(($(nproc)-1))
-      make -j $(($(nproc)-1))
+      make libs -j
+      make gotm -j
+      make fvcom -j
+      make -j
       cd
       cp fvcom/FVCOM41/FVCOM_source/fvcom fvcom/_run
       
@@ -83,13 +85,6 @@
       cp IMB-MPI1 ~/fvcom/_run
     args:
       creates: ~/fvcom/_run/fvcom
-
-  #- name: update openib parameter file
-  #  become: yes
-  #  lineinfile:
-  #    path: /usr/share/openmpi/mca-btl-openib-device-params.ini
-  #    regexp: '^vendor_part_id = 4119,4121'
-  #    line: 'vendor_part_id = 4119,4120,4121'
 
   - name: Tune Network
     become: yes
