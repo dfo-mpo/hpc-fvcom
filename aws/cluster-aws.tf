@@ -49,5 +49,8 @@ resource "null_resource" "prep_ansible" {
 	provisioner "local-exec" {
 		command = "echo [default] ${join(" ", aws_instance.vm.*.public_ip)} | tr \" \" \"\n\" > ansible.hosts"
 	}
+    provisioner "local-exec" {
+        command = "echo ${join("@", formatlist("Host %s @  User ubuntu@  Hostname %s@  IdentityFile ~/ubuntu.key", aws_instance.vm.*.public_ip, aws_instance.vm.*.public_ip))} | tr \"@\" \"\n\" > ~/vscode.hosts"
+    }
 
 }

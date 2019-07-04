@@ -40,6 +40,11 @@ variable "accelerated" {
   ]
 }
 
+data "azurerm_image" "fvcomimage" {
+  name                = "hpcfvcom"
+  resource_group_name = "packer-hpc-rg"
+}
+
 resource "azurerm_resource_group" "RG" {
   name     = "HPC-${upper(var.app_name)}-RG"
   location = var.resource_location
@@ -109,11 +114,15 @@ resource "azurerm_virtual_machine" "vm" {
   # Uncomment this line to delete the data disks automatically when deleting the VM
   delete_data_disks_on_termination = true
 
+  #storage_image_reference {
+    #publisher = "Canonical"
+    #offer     = "UbuntuServer"
+    #sku       = "18.04-LTS"
+    #version   = "latest"
+  #}
+
   storage_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
+    id = data.azurerm_image.fvcomimage.id
   }
 
   storage_os_disk {
@@ -146,6 +155,9 @@ resource "null_resource" "prep_ansible" {
 
   provisioner "local-exec" {
     command = "echo [default] ${join(" ", azurerm_public_ip.pip.*.ip_address)} | tr \" \" \"\n\" > ansible.hosts"
+  }
+  provisioner "local-exec" {
+    command = "echo ${join("@", formatlist("Host %s @  User ubuntu@  Hostname %s@  IdentityFile ~/ubuntu.key", azurerm_network_interface.vnic.*.name, azurerm_public_ip.pip.*.ip_address))} | tr \"@\" \"\n\" > ~/vscode.hosts"
   }
 }
 
