@@ -49,3 +49,8 @@ wget --quiet https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.
 ./configure --prefix=/usr 
 make -j `nproc` && sudo make install
 cd
+
+# MPI Benchmark
+git clone https://github.com/intel/opa-mpi-apps/ && cd opa-mpi-apps/MpiApps/apps/imb/src
+make CC=mpicc
+sudo cp IMB-MPI1 /usr/local/bin

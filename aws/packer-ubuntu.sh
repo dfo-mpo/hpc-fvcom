@@ -25,9 +25,6 @@ cd
 wget --quiet https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz && tar zxvf openmpi-4.0.1.tar.gz && cd openmpi-4.0.1
 # AWS EFA
 ./configure --prefix=/usr --enable-static --enable-shared --with-cuda=/usr/include --with-libfabric=/opt/amazon/efa
-# Other
-#./configure --prefix=/usr --enable-static --enable-shared --with-cuda=/usr/include
-
 make all -j && sudo make install
 cd
 
@@ -49,3 +46,8 @@ wget --quiet https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.
 ./configure --prefix=/usr 
 make -j `nproc` && sudo make install
 cd
+
+# MPI Benchmark
+git clone https://github.com/intel/opa-mpi-apps/ && cd opa-mpi-apps/MpiApps/apps/imb/src
+make CC=mpicc
+sudo cp IMB-MPI1 /usr/local/bin
