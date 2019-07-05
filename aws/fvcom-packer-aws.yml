@@ -37,16 +37,6 @@
       dest: "~/.ssh/config"
       content: "Host *\n    StrictHostKeyChecking no\n"
 
-  - name: Compile and install IMB-MPI1
-    become: yes
-    shell: |
-      cd
-      git clone https://github.com/intel/opa-mpi-apps/
-      cd opa-mpi-apps/MpiApps/apps/imb/src
-      make clean
-      make CC=mpicc
-      sudo cp IMB-MPI1 /usr/local/bin
-
   - name: Create MPI Hosts file
     become: yes
     become_user: hpc

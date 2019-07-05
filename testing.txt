@@ -21,7 +21,9 @@ mpirun --mca iof_base_verbose 10 --mca mca pml_base_verbose 10 --mca odls_base_v
 
 
 # AWS pingpong
-mpirun --bind-to core --hostfile ~/hosts ./IMB-MPI1 pingpong
+mpirun IMB-MPI1 pingpong
+mpirun --hostfile ~/hosts IMB-MPI1 pingpong
+mpirun --bind-to core --hostfile ~/hosts IMB-MPI1 pingpong
 
 mpirun --hostfile ~/hosts --mca btl self,tcp IMB-MPI1 pingpong
 

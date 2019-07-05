@@ -31,7 +31,6 @@ wget --quiet https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.
 make -j && sudo make install
 cd
 
-
 # NetCDF
 wget --quiet https://github.com/Unidata/netcdf-c/archive/v4.7.0.tar.gz && tar zxvf v4.7.0.tar.gz && cd netcdf-c-4.7.0
 ./configure --prefix=/usr
