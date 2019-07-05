@@ -37,6 +37,16 @@
       dest: "~/.ssh/config"
       content: "Host *\n    StrictHostKeyChecking no\n"
 
+  - name: Compile and install IMB-MPI1
+    become: yes
+    shell: |
+      cd
+      git clone https://github.com/intel/opa-mpi-apps/
+      cd opa-mpi-apps/MpiApps/apps/imb/src
+      make clean
+      make CC=mpicc
+      sudo cp IMB-MPI1 /usr/local/bin
+
   - name: Download data from S3
     become: yes
     become_user: hpc
@@ -68,7 +78,6 @@
       sudo chmod 777 -R /mnt
       cd fvcom/FVCOM41/Configure/
       ./setup -a UBUNTU-18.04-GCC -c wvi_inlets4_heating
-
       make clean
       make libs -j
       make gotm -j
@@ -76,13 +85,6 @@
       make -j
       cd
       cp fvcom/FVCOM41/FVCOM_source/fvcom fvcom/_run
-      
-      # Create the output directory
-      cd
-      git clone https://github.com/intel/opa-mpi-apps/
-      cd opa-mpi-apps/MpiApps/apps/imb/src
-      make CC=mpicc
-      cp IMB-MPI1 ~/fvcom/_run
     args:
       creates: ~/fvcom/_run/fvcom
 
