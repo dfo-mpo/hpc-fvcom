@@ -11,12 +11,19 @@ fi_info -p efa
 mpirun --bind-to core --hostfile ~/hosts -mca pml ucx -mca btl ^uct -x UCX_NET_DEVICES=mlx5_0:1 ./fvcom --CASENAME=wvi_inlets4
 mpirun --bind-to core --hostfile ~/hosts -mca pml ucx ./fvcom --CASENAME=wvi_inlets4
 mpirun --bind-to core --hostfile ~/hosts ./fvcom --CASENAME=wvi_inlets4
-mpirun --bind-to core -mca pml ucx -mca btl ^uct -x UCX_NET_DEVICES=mlx5_0:1 ./fvcom --CASENAME=wvi_inlets4
+mpirun --mca iof_base_verbose 10 --mca mca pml_base_verbose 10 --mca odls_base_verbose 10 --hostfile ~/hosts -mca pml ucx -mca btl ^uct ./fvcom --CASENAME=wvi_inlets4
+mpirun --hostfile ~/hosts ./fvcom --CASENAME=wvi_inlets4
+
+
+
+mpirun --mca iof_base_verbose 10 --mca mca pml_base_verbose 10 --mca odls_base_verbose 10 --hostfile ~/hosts -mca pml ucx -mca btl ^uct IMB-MPI1 pingpong
+
+
 
 # AWS pingpong
 mpirun --bind-to core --hostfile ~/hosts ./IMB-MPI1 pingpong
 
-mpirun --hostfile ~/hosts --mca btl self,tcp ./IMB-MPI1 pingpong
+mpirun --hostfile ~/hosts --mca btl self,tcp IMB-MPI1 pingpong
 
 
 

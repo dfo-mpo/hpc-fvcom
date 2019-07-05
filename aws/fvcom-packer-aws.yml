@@ -47,6 +47,13 @@
       make CC=mpicc
       sudo cp IMB-MPI1 /usr/local/bin
 
+  - name: Create MPI Hosts file
+    become: yes
+    become_user: hpc
+    copy:
+      dest: "~/hosts"
+      content: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join('\n') }}"
+
   - name: Download data from S3
     become: yes
     become_user: hpc
@@ -57,13 +64,6 @@
       aws s3 cp s3://dfohpc/fvcom ~/fvcom --recursive --quiet
     args:
       creates: ~/fvcom
-
-  - name: Create MPI Hosts file
-    become: yes
-    become_user: hpc
-    copy:
-      dest: "~/hosts"
-      content: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join('\n') }}"
 
   - name: Compile
     become: yes

@@ -26,8 +26,8 @@ resource "aws_key_pair" "sshkey" {
 
 resource "aws_instance" "vm" {
     count                   = "${var.instance_count}"
-    ami                     = "ami-024a64a6685d05041"   # Ubuntu 18.04LTS
-    #ami                     = "ami-00213cf1aa442f159"    # Packer-HPC
+    #ami                    = "ami-024a64a6685d05041"   # Ubuntu 18.04LTS
+    ami                     = "ami-0163d701cf47414e4"    # Packer-HPC
     instance_type           = "${var.instance_type}"
     key_name                = "${aws_key_pair.sshkey.key_name}"
     vpc_security_group_ids  = [ "sg-0beee46423a9746a2" ]
