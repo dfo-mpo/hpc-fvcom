@@ -21,11 +21,21 @@ mpirun --mca iof_base_verbose 10 --mca mca pml_base_verbose 10 --mca odls_base_v
 
 
 # AWS pingpong
-mpirun IMB-MPI1 pingpong
-mpirun --hostfile ~/hosts IMB-MPI1 pingpong
-mpirun --bind-to core --hostfile ~/hosts IMB-MPI1 pingpong
+mpirun -N 36 IMB-MPI1 bcast
+mpirun -N 36 --hostfile ~/hosts IMB-MPI1
 
-mpirun --hostfile ~/hosts --mca btl self,tcp IMB-MPI1 pingpong
+mpirun -N 36 --hostfile ~/hosts --mca btl self,tcp IMB-MPI1
+mpirun -N 36 --hostfile ~/hosts --mca pml ucx --mca btl ^uct IMB-MPI1 bcast
+mpirun -N 36 --hostfile ~/hosts --mca iof_base_verbose 10 --mca pml_base_verbose 10 --mca odls_base_verbose 10 --mca pml ucx --mca btl ^uct IMB-MPI1
+mpirun -N 36 --hostfile ~/hosts --mca iof_base_verbose 10 --mca pml_base_verbose 10 --mca odls_base_verbose 10 --mca pml ucx --mca btl ^vader,tcp,openib,uct IMB-MPI1 pingpong
+
+
+# Use OFI, not UCX as per github suggestion:
+
+mpirun --mca pml cm --mca mtl ofi
+mpirun --mca pml cm --mca mtl ofi --mca iof_base_verbose 10 --mca pml_base_verbose 10 --mca odls_base_verbose 10 IMB-MPI1
+mpirun -np 2 --hostfile ~/hosts --mca pml cm --mca mtl ofi --mca iof_base_verbose 10 --mca pml_base_verbose 10 --mca odls_base_verbose 10 IMB-MPI1
+
 
 
 
