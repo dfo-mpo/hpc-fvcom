@@ -23,14 +23,16 @@
       "image_sku": "18.04-LTS",
       
       "location": "East US",
-      "vm_size": "Standard_F64s_v2"
+      "vm_size": "Standard_F64s_v2",
+      "os_disk_size_gb": 32
     }
   ],
   "provisioners": [
     {
       "type": "shell",
       "script": "./packer-ubuntu.sh",
-      "valid_exit_codes": [0, 1]
+      "valid_exit_codes": [0, 1],
+      "timeout": "30m"
     }
   ]
 }
