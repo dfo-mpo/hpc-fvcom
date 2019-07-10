@@ -1,4 +1,4 @@
-- name: AWS(Ubuntu) FVCOM
+- name: Azure(Ubuntu) FVCOM
   hosts: all
   
   gather_facts: true
@@ -37,12 +37,8 @@
       dest: "~/.ssh/config"
       content: "Host *\n    StrictHostKeyChecking no\n"
 
-  - name: Download blob
-    become: yes
-    become_user: hpc
-    shell: 'azcopy copy "{{ lookup("env","SAS_URL") }}" ~/ --recursive=true'
-    args:
-      creates: ~/fvcom
+  - name: Azure specific UCX/IB
+    script: set-pkey.sh
 
   - name: Create MPI Hosts file
     become: yes
@@ -50,6 +46,40 @@
     copy:
       dest: "~/hosts"
       content: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join('\n') }}"
+
+  - name: Change limits.conf for InfiniBand
+    become: yes
+    become_user: hpc
+    shell: |
+      cd
+      chmod -R
+      cat << EOF | sudo tee -a /etc/security/limits.conf
+      *               hard    memlock         unlimited
+      *               soft    memlock         unlimited
+      *               hard    nofile          65535
+      *               soft    nofile          65535
+      EOF
+
+  - name: Tune Network
+    become: yes
+    become_user: hpc
+    shell: |
+      sysctl -w net.core.rmem_max=2147483647
+      sysctl -w net.core.wmem_max=2147483647
+      sysctl -w net.ipv4.tcp_rmem=4096 87380 2147483647
+      sysctl -w net.ipv4.tcp_wmem=4096 65536 2147483647
+      #sysctl -w net.core.netdev_max_backlog=30000
+      sysctl -w net.core.rmem_default=16777216
+      sysctl -w net.core.wmem_default=16777216
+      sysctl -w net.ipv4.tcp_mem='16777216 16777216 16777216'
+      sysctl -w net.ipv4.route.flush=1
+
+  - name: Download blob
+    become: yes
+    become_user: hpc
+    shell: 'azcopy copy "{{ lookup("env","SAS_URL") }}" ~/ --recursive=true'
+    args:
+      creates: ~/fvcom
 
   - name: Compile
     become: yes
@@ -73,35 +103,9 @@
       cd
       cp fvcom/FVCOM41/FVCOM_source/fvcom fvcom/_run
       
-      # Create the output directory
-      cd
-      git clone https://github.com/intel/opa-mpi-apps/
-      cd opa-mpi-apps/MpiApps/apps/imb/src
-      make CC=mpicc
-      cp IMB-MPI1 ~/fvcom/_run
+
     args:
       creates: ~/fvcom/_run/fvcom
-
-  #- name: update openib parameter file
-  #  become: yes
-  #  lineinfile:
-  #    path: /usr/share/openmpi/mca-btl-openib-device-params.ini
-  #    regexp: '^vendor_part_id = 4119,4121'
-  #    line: 'vendor_part_id = 4119,4120,4121'
-
-  - name: Tune Network
-    become: yes
-    become_user: hpc
-    shell: |
-      sysctl -w net.core.rmem_max=2147483647
-      sysctl -w net.core.wmem_max=2147483647
-      sysctl -w net.ipv4.tcp_rmem=4096 87380 2147483647
-      sysctl -w net.ipv4.tcp_wmem=4096 65536 2147483647
-      #sysctl -w net.core.netdev_max_backlog=30000
-      sysctl -w net.core.rmem_default=16777216
-      sysctl -w net.core.wmem_default=16777216
-      sysctl -w net.ipv4.tcp_mem='16777216 16777216 16777216'
-      sysctl -w net.ipv4.route.flush=1
 
   - name: Do science
     become: yes
@@ -114,33 +118,8 @@
       # SINGLE HOST TEST
       # mpirun --bind-to core --mca btl self,vader ./fvcom --CASENAME=wvi_inlets4
 
-      # This one cuts in half (F* series)
-      # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
-      
-      # Run all cores (Hc44rs)
-      # mpirun -N $(nproc) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
+      # Benchmark sendrecv over UCX/IB
+      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib -x UCX_IB_PKEY=$UCX_IB_PKEY --hostfile ~/hosts IMB-MPI1 sendrecv
 
-      # Bind options
-      # --bind-to numa
-      # --bind-to core
-      # --bind-to socket
-      
-      # f16 - scaling is perfect with 1node vs 2node. --oversubscribe helps a little bit, not much.
-      
-      # mpirun -N 32 --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
-      # mpirun -N $(($(nproc)/2)) --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
-      # mpirun --bind-to numa --hostfile ~/hosts --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
-      # mpirun --bind-to core --mca btl self,vader,tcp ./fvcom --CASENAME=wvi_inlets4
-
-      # 8 nodes, f64
-      # no parameters, 0.06
-      # bind to NUMA, 0.058
-      # bind to CORE, 0.61
-      # bind to SOCKET , 0.61
-
-      # 2 nodes, f72
-      # no params, 0.072
-      # bind to NUMA, 0.072
-
-      # 2 nodes, hc44rs, tcp
-      # bind to NUMA, 0.082
+      # Try FVCOM over UCX/IB
+      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib -x UCX_IB_PKEY=$UCX_IB_PKEY --hostfile ~/hosts ./fvcom --CASENAME=wvi_inlets4

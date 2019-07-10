@@ -1,6 +1,6 @@
 variable "instance_count" {
   description = "Defines the number of VMs to be provisioned."
-  default     = "1"
+  default     = "3"
 }
 variable "app_name" {
   description = "Application Name"
