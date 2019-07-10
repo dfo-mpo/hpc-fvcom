@@ -3,7 +3,8 @@
     "client_id": "{{ env `ARM_CLIENT_ID` }}",
     "client_secret": "{{env `ARM_CLIENT_SECRET` }}",
     "tenant_id": "{{env `ARM_TENANT_ID`}}",
-    "subscription_id": "{{env `ARM_SUBSCRIPTION_ID`}}"
+    "subscription_id": "{{env `ARM_SUBSCRIPTION_ID`}}",
+    "SAS_URL": "{{env `SAS_URL`}}"
   },
   "builders": [
     {
@@ -32,7 +33,24 @@
       "type": "shell",
       "script": "./packer-ubuntu.sh",
       "valid_exit_codes": [0, 1],
-      "timeout": "30m"
+      "timeout": "30m",
+      "pause_before": "30s"
+    },
+    {
+      "type": "shell",
+      "script": "./packer-infiniband.sh"
+    },
+    {
+      "type": "shell",
+      "script": "./packer-nettune.sh"
+    },
+    {
+      "type": "shell",
+      "environment_vars": [
+        "SAS_URL={{user `SAS_URL`}}"
+      ],
+      "script": "./packer-fvcom.sh",
+      "timeout": "20m"
     }
   ]
 }
