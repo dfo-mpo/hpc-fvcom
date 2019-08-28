@@ -3,15 +3,14 @@ provider "aws" {
 }
 variable instance_count {
 	description = "Defines the number of VMs to be provisioned."
-	default     = "1"
+	#default     = "2"
 }
 
 variable "instance_type" {
-    default = "c5n.18xlarge"
-    #default = "c5.xlarge"
-    #default = "c5.18xlarge"
-    #default = "c5.24xlarge"
-    #default = "c5.metal"
+    #default = "c5n.18xlarge"   # EFA (will not work with Terraform yet)
+    default = "c5.18xlarge"    # 72vCPU (36 physical core)
+    #default = "c5.24xlarge"    # 96vCPU (48 physical core)
+    #default = "c5.metal"       # 96vCPU (48 physical core), metal
     #default = "m4.large"
 }
 
@@ -27,10 +26,10 @@ resource "aws_key_pair" "sshkey" {
 resource "aws_instance" "vm" {
     count                   = "${var.instance_count}"
     #ami                    = "ami-024a64a6685d05041"   # Ubuntu 18.04LTS
-    ami                     = "ami-005ecfe88f1af76a4"    # Packer-HPC
+    ami                     = "ami-050a044d963650907"    # Packer-HPC, August 28
     instance_type           = "${var.instance_type}"
     key_name                = "${aws_key_pair.sshkey.key_name}"
-    vpc_security_group_ids  = [ "sg-0beee46423a9746a2" ]
+    vpc_security_group_ids  = [ "sg-078a0d89b28b2da97" ]
     placement_group         = "cluster"
     root_block_device {
         volume_type = "gp2"

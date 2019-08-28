@@ -44,6 +44,28 @@
       dest: "~/hosts"
       content: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join('\n') }}"
 
+  - name: Set PKEY
+    become: yes
+    become_user: hpc
+    shell: |
+      high_key=`sort -r /sys/class/infiniband/mlx5_0/ports/1/pkeys/* | head -1`
+      modified_key=$(printf '0x%04X\n' "$((high_key ^ 0x8000))")
+
+      echo Setting UCX_IB_KEY to $modified_key
+      export UCX_IB_PKEY=$modified_key
+
+      echo "export UCX_IB_PKEY=$modified_key" | sudo tee -a /etc/profile.d/ucx_pkey.sh
+      sudo chmod 755 /etc/profile.d/ucx_pkey.sh
+
+
+      echo "Updating limits.conf for InifiniBand..."
+      cat << EOF | sudo tee -a /etc/security/limits.conf
+      *               hard    memlock         unlimited
+      *               soft    memlock         unlimited
+      *               hard    nofile          65535
+      *               soft    nofile          65535
+      EOF
+
   - name: Do science
     become: yes
     become_user: hpc

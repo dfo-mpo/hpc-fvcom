@@ -38,10 +38,6 @@
     },
     {
       "type": "shell",
-      "script": "./packer-infiniband.sh"
-    },
-    {
-      "type": "shell",
       "script": "./packer-nettune.sh"
     },
     {
