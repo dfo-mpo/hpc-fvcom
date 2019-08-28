@@ -64,7 +64,10 @@
     shell: |
       cd
       cd fvcom/_run
-
+      sudo mkdir /mnt/fvcom
+      sudo chmod 777 /mnt/fvcom
+      sudo chmod -R 777 /opt/fvcom
+      mkdir /opt/fvcom/_run/wvi_inlets4
       # SINGLE HOST TEST
       # mpirun --bind-to core --mca btl self,vader ./fvcom --CASENAME=wvi_inlets4
 
@@ -73,6 +76,7 @@
 
       # Try FVCOM over UCX/IB
       # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib -x UCX_IB_PKEY=$UCX_IB_PKEY --hostfile ~/hosts ./fvcom --CASENAME=wvi_inlets4
+      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib -x UCX_IB_PKEY=$UCX_IB_PKEY --hostfile ~/hosts fvcom --CASENAME=wvi_inlets4
 
       # 0.0336  132 cores   = 0.00025454545 per core - 3928.57142857
       # 0.0496  88 cores    = 0.00056363636 - 1774.19354839
