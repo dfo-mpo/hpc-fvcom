@@ -11,3 +11,4 @@
 hosts
 ansible.hosts
 *.key
+*.code-workspace*
