@@ -129,7 +129,8 @@ resource "azurerm_virtual_machine" "vm" {
     name              = "osdisk${count.index + 1}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
-    managed_disk_type = "StandardSSD_LRS"
+    #managed_disk_type = "StandardSSD_LRS"
+    managed_disk_type = "Premium_LRS"
     disk_size_gb      = "64"
   }
 

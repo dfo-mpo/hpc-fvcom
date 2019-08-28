@@ -25,7 +25,7 @@
       
       "location": "East US",
       "vm_size": "Standard_F64s_v2",
-      "os_disk_size_gb": 32
+      "os_disk_size_gb": 64
     }
   ],
   "provisioners": [
