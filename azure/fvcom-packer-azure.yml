@@ -57,15 +57,6 @@
       echo "export UCX_IB_PKEY=$modified_key" | sudo tee -a /etc/profile.d/ucx_pkey.sh
       sudo chmod 755 /etc/profile.d/ucx_pkey.sh
 
-
-      echo "Updating limits.conf for InifiniBand..."
-      cat << EOF | sudo tee -a /etc/security/limits.conf
-      *               hard    memlock         unlimited
-      *               soft    memlock         unlimited
-      *               hard    nofile          65535
-      *               soft    nofile          65535
-      EOF
-
   - name: Do science
     become: yes
     become_user: hpc

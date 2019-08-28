@@ -42,6 +42,10 @@
     },
     {
       "type": "shell",
+      "script": "./packer-infiniband.sh"
+    },
+    {
+      "type": "shell",
       "environment_vars": [
         "SAS_URL={{user `SAS_URL`}}"
       ],
