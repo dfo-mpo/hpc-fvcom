@@ -15,6 +15,14 @@
       "subscription_id": "{{user `subscription_id`}}",
       "tenant_id": "{{user `tenant_id`}}",
 
+      "shared_image_gallery_destination": {
+        "resource_group": "packer-hpc-rg",
+        "gallery_name": "hpcimages",
+        "image_name": "ompi",
+        "image_version": "1",
+        "replication_regions": ["East US"]
+      },
+
       "managed_image_name": "hpcfvcom",
       "managed_image_resource_group_name": "packer-hpc-rg",
 
