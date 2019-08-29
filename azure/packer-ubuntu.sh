@@ -5,7 +5,7 @@
 # Get stuff
 sudo apt-get -yqq update
 export DEBIAN_FRONTEND=noninteractive
-sudo apt-get -yqq install cmake git makedepf90 gfortran gcc patch htop iptraf-ng zlib1g-dev libcurl4-openssl-dev pkg-config git gcc gcc-opt cmake patch autoconf flex librdmacm-dev libnuma-dev doxygen nvidia-cuda-dev texlive-latex-base libfabric-dev
+sudo apt-get -yqq install cmake git makedepf90 gfortran gcc patch htop iptraf-ng zlib1g-dev libcurl4-openssl-dev pkg-config gcc-opt autoconf flex librdmacm-dev libnuma-dev doxygen nvidia-cuda-dev texlive-latex-base libfabric-dev
 
 # AzCopy Install
 wget --quiet --content-disposition https://aka.ms/downloadazcopy-v10-linux && tar zxvf azcopy_linux_amd64_*.tar.gz && sudo cp azcopy_linux_amd64*/azcopy /usr/local/bin/
