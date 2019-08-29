@@ -19,7 +19,7 @@
         "resource_group": "packer-hpc-rg",
         "gallery_name": "hpcimages",
         "image_name": "ompi",
-        "image_version": "1",
+        "image_version": "1.0.0",
         "replication_regions": ["East US"]
       },
 
@@ -32,7 +32,7 @@
       "image_sku": "18.04-LTS",
       
       "location": "East US",
-      "vm_size": "Standard_F64s_v2",
+      "vm_size": "Standard_F32s_v2",
       "os_disk_size_gb": 64
     }
   ],
