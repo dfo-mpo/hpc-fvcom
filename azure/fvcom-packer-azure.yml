@@ -54,7 +54,7 @@
       echo Setting UCX_IB_KEY to $modified_key
       export UCX_IB_PKEY=$modified_key
 
-      echo "export UCX_IB_PKEY=$modified_key" | sudo tee -a /etc/profile.d/ucx_pkey.sh
+      echo "export UCX_IB_PKEY=$modified_key" | sudo tee /etc/profile.d/ucx_pkey.sh
       sudo chmod 755 /etc/profile.d/ucx_pkey.sh
 
   - name: Do science
@@ -72,11 +72,11 @@
       # mpirun --bind-to core --mca btl self,vader ./fvcom --CASENAME=wvi_inlets4
 
       # Benchmark sendrecv over UCX/IB
-      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib -x UCX_IB_PKEY=$UCX_IB_PKEY --hostfile ~/hosts IMB-MPI1 sendrecv
+      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts IMB-MPI1 sendrecv
 
       # Try FVCOM over UCX/IB
-      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib -x UCX_IB_PKEY=$UCX_IB_PKEY --hostfile ~/hosts ./fvcom --CASENAME=wvi_inlets4
-      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib -x UCX_IB_PKEY=$UCX_IB_PKEY --hostfile ~/hosts fvcom --CASENAME=wvi_inlets4
+      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts ./fvcom --CASENAME=wvi_inlets4
+      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom --CASENAME=wvi_inlets4
 
       # 0.0336  132 cores   = 0.00025454545 per core - 3928.57142857
       # 0.0496  88 cores    = 0.00056363636 - 1774.19354839

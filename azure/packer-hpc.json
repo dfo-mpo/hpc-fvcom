@@ -4,7 +4,7 @@
     "client_secret": "{{env `ARM_CLIENT_SECRET` }}",
     "tenant_id": "{{env `ARM_TENANT_ID`}}",
     "subscription_id": "{{env `ARM_SUBSCRIPTION_ID`}}",
-    "SAS_URL": "{{env `SAS_URL`}}"
+    "SAS_FVCOM_CODE": "{{env `SAS_FVCOM_CODE`}}"
   },
   "builders": [
     {
@@ -56,7 +56,7 @@
     {
       "type": "shell",
       "environment_vars": [
-        "SAS_URL={{user `SAS_URL`}}"
+        "SAS_FVCOM_CODE={{user `SAS_FVCOM_CODE`}}"
       ],
       "script": "./packer-fvcom.sh",
       "timeout": "20m"
