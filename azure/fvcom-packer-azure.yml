@@ -44,18 +44,13 @@
       dest: "~/hosts"
       content: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join('\n') }}"
 
-  - name: Set PKEY
+  - name: Add PKEY to environment
     become: yes
     become_user: hpc
     shell: |
       high_key=`sort -r /sys/class/infiniband/mlx5_0/ports/1/pkeys/* | head -1`
       modified_key=$(printf '0x%04X\n' "$((high_key ^ 0x8000))")
-
-      echo Setting UCX_IB_KEY to $modified_key
-      export UCX_IB_PKEY=$modified_key
-
-      echo "export UCX_IB_PKEY=$modified_key" | sudo tee /etc/profile.d/ucx_pkey.sh
-      sudo chmod 755 /etc/profile.d/ucx_pkey.sh
+      echo "UCX_IB_PKEY=$modified_key" | sudo tee /etc/environment
  
   - name: Download FVCOM dataset
     become: yes
@@ -70,21 +65,24 @@
     become_user: hpc
     run_once: true
     shell: |
-      cd
-      cd fvcom/_run
-      sudo mkdir /mnt/fvcom
-      sudo chmod 777 /mnt/fvcom
-      sudo chmod -R 777 /opt/fvcom
-      mkdir /opt/fvcom/_run/wvi_inlets4
+      high_key=`sort -r /sys/class/infiniband/mlx5_0/ports/1/pkeys/* | head -1`
+      modified_key=$(printf '0x%04X\n' "$((high_key ^ 0x8000))")
+      export UCX_IB_PKEY=$modified_key
+
+      cd /opt/data
+            
       # SINGLE HOST TEST
-      # mpirun --bind-to core --mca btl self,vader ./fvcom --CASENAME=wvi_inlets4
+      # mpirun --bind-to core --camca btl self,vader ./fvcom --CASENAME=wvi_inlets4
 
       # Benchmark sendrecv over UCX/IB
       # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts IMB-MPI1 sendrecv
 
       # Try FVCOM over UCX/IB
-      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts ./fvcom --CASENAME=wvi_inlets4
-      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom --CASENAME=wvi_inlets4
+      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts -x UCX_IB_PKEY=$UCX_IB_PKEY./fvcom --CASENAME=wvi_inlets4
+      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts -x UCX_IB_PKEY=$UCX_IB_PKEYfvcom --CASENAME=wvi_inlets4
+      
+      # Pingpong over UCX/IB
+      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts -x UCX_IB_PKEY=$UCX_IB_PKEY IMB-MPI1 pingpong
 
       # 0.0336  132 cores   = 0.00025454545 per core - 3928.57142857
       # 0.0496  88 cores    = 0.00056363636 - 1774.19354839
