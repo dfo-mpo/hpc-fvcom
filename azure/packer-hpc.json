@@ -25,7 +25,8 @@
 
       "managed_image_name": "hpcfvcom",
       "managed_image_resource_group_name": "packer-hpc-rg",
-
+      "managed_image_storage_account_type": "Premium_LRS",
+      
       "os_type": "Linux",
       "image_publisher": "Canonical",
       "image_offer": "UbuntuServer",
