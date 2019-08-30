@@ -10,7 +10,7 @@ azcopy copy "$SAS_URL" /opt --recursive=true
 cd /opt
 chmod -R 755 fvcom
 cd fvcom/FVCOM41/Configure/
-./setup -a UBUNTU-18.04-GCC -c wvi_inlets4_heating
+./setup -a UBUNTU-16.04-GCC -c wvi_inlets4_heating
 
 make clean
 make libs -j
