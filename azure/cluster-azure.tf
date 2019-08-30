@@ -9,39 +9,35 @@ variable "app_name" {
 
 variable "resource_location" {
   description = "Location of the infrastructure"
+  #default     = "South Central US"
   default     = "East US"
 }
 
 variable "instance_size" {
   description = "Size of the instance"
-  #default = "Standard_F4s_v2"
-  #default = "Standard_F8s_v2"
-  #default = "Standard_F16s_v2"
   #default = "Standard_F32s_v2"
   #default = "Standard_F64s_v2"
   #default = "Standard_F72s_v2"
   #default = "Standard_B2ms"
   #default = "Standard_H16r"
-  default = "Standard_Hc44rs"
-  #default = "Standard_Hb60rs"
+  #default = "Standard_Hc44rs"
+  default = "Standard_Hb60rs"
 }
 
 variable "accelerated" {
   description = "List of accelerated instance sizes"
   default = [
-    "Standard_F4s_v2",
-    "Standard_F8s_v2",
-    "Standard_F16s_v2",
     "Standard_F32s_v2",
     "Standard_F64s_v2",
     "Standard_F72s_v2",
+    "Standard_HB120rs"
     #"Standard_Hc44rs",
     #"Standard_Hb60rs"
   ]
 }
-
-data "azurerm_image" "fvcomimage" {
-  name                = "hpcfvcom"
+data "azurerm_shared_image" "hpc-sig-image" {
+  name              = "ompi"
+  gallery_name      = "hpcimages"
   resource_group_name = "packer-hpc-rg"
 }
 
@@ -57,6 +53,7 @@ data "azurerm_resource_group" "network-rg" {
 
 # Use existing HPC-VNET
 data "azurerm_virtual_network" "vnet" {
+  #name                = "HPC-VNET-SC"
   name                = "HPC-VNET"
   resource_group_name = "${data.azurerm_resource_group.network-rg.name}"
 }
@@ -122,7 +119,8 @@ resource "azurerm_virtual_machine" "vm" {
   #}
 
   storage_image_reference {
-    id = data.azurerm_image.fvcomimage.id
+    #id = data.azurerm_image.fvcomimage.id
+    id = data.azurerm_shared_image.hpc-sig-image.id
   }
 
   storage_os_disk {

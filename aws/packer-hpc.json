@@ -1,6 +1,7 @@
 {
   "variables": {
-    "region": "us-east-1"
+    "region": "us-east-1",
+    "SAS_FVCOM_CODE": "{{env `SAS_FVCOM_CODE`}}"
   },
   "builders": [
     {
@@ -35,11 +36,17 @@
     {
       "type": "shell",
       "script": "./packer-efa.sh",
-      "expect_disconnect": "true"
+      "expect_disconnect": "true",
+      "pause_before": "30s"
     },
     {
       "type": "shell",
       "script": "./packer-ubuntu.sh",
+      "valid_exit_codes": [0, 1]
+    },
+    {
+      "type": "shell",
+      "script": "./packer-fvcom.sh",
       "valid_exit_codes": [0, 1]
     }
     
