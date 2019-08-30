@@ -57,12 +57,13 @@
       echo "export UCX_IB_PKEY=$modified_key" | sudo tee /etc/profile.d/ucx_pkey.sh
       sudo chmod 755 /etc/profile.d/ucx_pkey.sh
  
- - name: Download FVCOM dataset
+  - name: Download FVCOM dataset
     become: yes
     become_user: hpc
     shell: |
       azcopy copy "{{ lookup('env','SAS_FVCOM_DATA') }}" /opt --recursive=true
-    creates: /opt/data
+    args:
+      creates: /opt/data
 
   - name: Do science
     become: yes
