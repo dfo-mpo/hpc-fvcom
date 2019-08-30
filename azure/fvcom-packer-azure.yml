@@ -50,7 +50,7 @@
     shell: |
       high_key=`sort -r /sys/class/infiniband/mlx5_0/ports/1/pkeys/* | head -1`
       modified_key=$(printf '0x%04X\n' "$((high_key ^ 0x8000))")
-      echo "UCX_IB_PKEY=$modified_key" | sudo tee /etc/environment
+      echo "UCX_IB_PKEY=$modified_key" | sudo tee -a /etc/environment
  
   - name: Download FVCOM dataset
     become: yes
