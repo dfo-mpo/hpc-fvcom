@@ -77,7 +77,7 @@ resource "azurerm_network_interface" "vnic" {
   name                          = "hpc-${lower(var.app_name)}-nic${count.index + 1}"
   location                      = azurerm_resource_group.RG.location
   resource_group_name           = azurerm_resource_group.RG.name
-  enable_accelerated_networking = "${contains(var.accelerated, var.instance_size) ? true : false}"
+  enable_accelerated_networking = contains(var.accelerated, var.instance_size) ? true : false
 
   ip_configuration {
     name                          = "testConfiguration"
@@ -141,7 +141,7 @@ resource "azurerm_virtual_machine" "vm" {
 
     ssh_keys {
       path     = "/home/ubuntu/.ssh/authorized_keys"
-      key_data = "${file("~/ubuntu.key.pub")}"
+      key_data = file("~/ubuntu.key.pub")
     }
   }
 }
@@ -150,7 +150,7 @@ resource "null_resource" "prep_ansible" {
   triggers = {
     build_number = "${timestamp()}"
   }
-  depends_on = ["azurerm_virtual_machine.vm"]
+  depends_on = [azurerm_virtual_machine.vm]
 
   provisioner "local-exec" {
     command = "echo [default] ${join(" ", azurerm_public_ip.pip.*.ip_address)} | tr \" \" \"\n\" > ansible.hosts"
