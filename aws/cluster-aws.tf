@@ -20,15 +20,15 @@ variable "aws_region" {
 
 resource "aws_key_pair" "sshkey" {
     key_name   = "ubuntu"
-    public_key = "${file("~/ubuntu.key.pub")}"
+    public_key = file("~/ubuntu.key.pub")
 }
 
 resource "aws_instance" "vm" {
-    count                   = "${var.instance_count}"
+    count                   = var.instance_count
     #ami                    = "ami-024a64a6685d05041"   # Ubuntu 18.04LTS
     ami                     = "ami-050a044d963650907"    # Packer-HPC, August 28
-    instance_type           = "${var.instance_type}"
-    key_name                = "${aws_key_pair.sshkey.key_name}"
+    instance_type           = var.instance_type
+    key_name                = aws_key_pair.sshkey.key_name
     vpc_security_group_ids  = [ "sg-078a0d89b28b2da97" ]
     placement_group         = "cluster"
     root_block_device {
@@ -43,7 +43,7 @@ resource "null_resource" "prep_ansible" {
 	triggers = {
 		build_number = "${timestamp()}"
 	}
-	depends_on = ["aws_instance.vm"]
+	depends_on = [aws_instance.vm]
 
 	provisioner "local-exec" {
 		command = "echo [default] ${join(" ", aws_instance.vm.*.public_ip)} | tr \" \" \"\n\" > ansible.hosts"
