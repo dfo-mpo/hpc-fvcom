@@ -11,15 +11,15 @@ sudo apt-get -yqq install cmake git makedepf90 gfortran gcc patch htop iptraf-ng
 wget --quiet --content-disposition https://aka.ms/downloadazcopy-v10-linux && tar zxvf azcopy_linux_amd64_*.tar.gz && sudo cp azcopy_linux_amd64*/azcopy /usr/local/bin/ && rm azcopy* -rf
 
 # OpenUCX
-wget --quiet https://github.com/openucx/ucx/releases/download/v1.6.1/ucx-1.6.1.tar.gz && tar xzf ucx-1.6.1.tar.gz && cd ucx-1.6.1
+#wget --quiet https://github.com/openucx/ucx/releases/download/v1.6.1/ucx-1.6.1.tar.gz && tar xzf ucx-1.6.1.tar.gz && cd ucx-1.6.1
+wget --quiet https://github.com/openucx/ucx/releases/download/v1.5.1/ucx-1.5.1.tar.gz && tar xzf ucx-1.5.1.tar.gz && cd ucx-1.5.1
 ./contrib/configure-release --prefix=/usr
 make -j && sudo make install
 cd
 
 # OpenMPI
-wget --quiet https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz && tar zxvf openmpi-4.0.1.tar.gz && cd openmpi-4.0.1
+wget --quiet https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.2.tar.gz && tar zxvf openmpi-4.0.2.tar.gz && cd openmpi-4.0.2
 ./configure --prefix=/usr --enable-static --enable-shared --with-cuda=/usr/include
-
 make all -j && sudo make install
 cd
 
@@ -30,13 +30,13 @@ make -j && sudo make install
 cd
 
 # NetCDF
-wget --quiet https://github.com/Unidata/netcdf-c/archive/v4.7.0.tar.gz && tar zxvf v4.7.0.tar.gz && cd netcdf-c-4.7.0
+wget --quiet https://github.com/Unidata/netcdf-c/archive/v4.7.2.tar.gz && tar zxvf v4.7.2.tar.gz && cd netcdf-c-4.7.2
 ./configure --prefix=/usr
 make -j `nproc` && sudo make install
 cd
 
 # NetCDF-Fortran
-wget --quiet https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.4.5.tar.gz && tar zxvf netcdf-fortran-4.4.5.tar.gz && cd netcdf-fortran-4.4.5/
+wget --quiet https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.7.2.tar.gz && tar zxvf netcdf-fortran-4.7.2.tar.gz && cd netcdf-fortran-4.7.2/
 ./configure --prefix=/usr 
 make -j `nproc` && sudo make install
 cd
