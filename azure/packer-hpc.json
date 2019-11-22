@@ -43,7 +43,7 @@
       "script": "./packer-ubuntu.sh",
       "valid_exit_codes": [0, 1],
       "timeout": "30m",
-      "pause_before": "30s"
+      "pause_before": "45s"
     },
     {
       "type": "shell",
