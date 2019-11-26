@@ -12,14 +12,15 @@ sudo apt-get -yqq install nvidia-cuda-dev
 # AWS CLI Install
 sudo apt-get -yqq install awscli
 
-# Make OpenUCX - (c5.18xl 22sec)
+# OpenUCX
+#wget --quiet https://github.com/openucx/ucx/releases/download/v1.6.1/ucx-1.6.1.tar.gz && tar xzf ucx-1.6.1.tar.gz && cd ucx-1.6.1
 wget --quiet https://github.com/openucx/ucx/releases/download/v1.5.1/ucx-1.5.1.tar.gz && tar xzf ucx-1.5.1.tar.gz && cd ucx-1.5.1
 ./contrib/configure-release --prefix=/usr
 make -j && sudo make install
 cd
 
 # Make OpenMPI - (c5.18xl 3m30s)
-wget --quiet https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz && tar zxvf openmpi-4.0.1.tar.gz && cd openmpi-4.0.1
+wget --quiet https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.2.tar.gz && tar zxvf openmpi-4.0.2.tar.gz && cd openmpi-4.0.2
 # AWS EFA
 ./configure --prefix=/usr --enable-static --enable-shared --with-cuda=/usr/include --with-libfabric=/opt/amazon/efa
 make all -j && sudo make install
@@ -32,13 +33,13 @@ make -j && sudo make install
 cd
 
 # NetCDF
-wget --quiet https://github.com/Unidata/netcdf-c/archive/v4.7.0.tar.gz && tar zxvf v4.7.0.tar.gz && cd netcdf-c-4.7.0
+wget --quiet https://github.com/Unidata/netcdf-c/archive/v4.7.3.tar.gz && tar zxvf v4.7.3.tar.gz && cd netcdf-c-4.7.3
 ./configure --prefix=/usr
 make -j `nproc` && sudo make install
 cd
 
 # NetCDF-Fortran
-wget --quiet https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.4.5.tar.gz && tar zxvf netcdf-fortran-4.4.5.tar.gz && cd netcdf-fortran-4.4.5/
+wget --quiet https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.5.2.tar.gz && tar zxvf netcdf-fortran-4.5.2.tar.gz && cd netcdf-fortran-4.5.2/
 ./configure --prefix=/usr 
 make -j `nproc` && sudo make install
 cd
