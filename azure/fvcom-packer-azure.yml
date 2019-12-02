@@ -69,9 +69,13 @@
       modified_key=$(printf '0x%04X\n' "$((high_key ^ 0x8000))")
       export UCX_IB_PKEY=$modified_key
 
-      cd /opt/data/wvi_inlets4
+      # WVI_INLETS4
+      # cd /opt/data/wvi_inlets4
       # mpirun -npernode `nproc` -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom --CASENAME=wvi_inlets4
       
+      # ESI
+      # cd /opt/data/esi
+      # mpirun -npernode `nproc` -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom --CASENAME=esi
       
       
       
