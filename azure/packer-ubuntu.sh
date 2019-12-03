@@ -2,10 +2,17 @@
 # UBUNTU 18.04 LTS
 # Compile all needed libraries for an HPC image
 
+# Disable selinux
+setenforce 0
+sed -i 's/SELINUX=.*$/SELINUX=disabled/g' /etc/selinux/config
+
 # Dependencies
-sudo apt-get -yqq update
 export DEBIAN_FRONTEND=noninteractive
+sudo apt-get -yqq update
 sudo apt-get -yqq install cmake git makedepf90 gfortran gcc patch htop iptraf-ng zlib1g-dev libcurl4-openssl-dev pkg-config gcc-opt autoconf flex librdmacm-dev libnuma-dev doxygen nvidia-cuda-dev texlive-latex-base libfabric-dev
+
+# Update stuff
+sudo apt-get -y upgrade
 
 # AzCopy
 wget --quiet --content-disposition https://aka.ms/downloadazcopy-v10-linux && tar zxvf azcopy_linux_amd64_*.tar.gz && sudo cp azcopy_linux_amd64*/azcopy /usr/local/bin/ && rm azcopy* -rf
@@ -19,20 +26,20 @@ cd
 
 # OpenMPI
 wget --quiet https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.2.tar.gz && tar zxvf openmpi-4.0.2.tar.gz && cd openmpi-4.0.2
-./configure --prefix=/usr --enable-static --enable-shared --with-cuda=/usr/include # works
-make all -j && sudo make install #works
+./configure --prefix=/usr --enable-static --enable-shared --with-cuda=/usr/include
+make all -j && sudo make install
 cd
 
 # HDF5
 wget --quiet https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.5/src/hdf5-1.10.5.tar.gz && tar zxvf hdf5-1.10.5.tar.gz && cd hdf5-1.10.5/
-./configure --prefix=/usr --enable-fortran --enable-shared --enable-static #--enable-parallel
-make -j && sudo make install #WORKS
+./configure --prefix=/usr --enable-fortran --enable-shared --enable-static
+make -j && sudo make install
 cd
 
 # NetCDF
 wget --quiet https://github.com/Unidata/netcdf-c/archive/v4.7.3.tar.gz && tar zxvf v4.7.3.tar.gz && cd netcdf-c-4.7.3
 ./configure --prefix=/usr
-make -j `nproc` && sudo make install # WORKS
+make -j `nproc` && sudo make install
 cd
 
 # NetCDF-Fortran
