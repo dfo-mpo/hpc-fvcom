@@ -30,6 +30,6 @@ do
     make gotm -j
     make fvcom -j
     make -j
-    sudo mv /opt/code/FVCOM41/FVCOM_source/fvcom /usr/local/bin/fvcom_$x
+    sudo mv /opt/code/FVCOM41/FVCOM_source/fvcom /usr/local/bin/fvcom_`basename $i`
     echo "Compiled and installed fvcom_`basename $i`" >> /opt/code/compile.txt
 done

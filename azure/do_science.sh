@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Number of instances to run
-export TF_VAR_instance_count=1
+export TF_VAR_instance_count=6
 
 echo building infrastructure...
 terraform init
