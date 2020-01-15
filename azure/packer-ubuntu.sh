@@ -3,9 +3,14 @@
 # Compile all needed libraries for an HPC image
 
 # Dependencies
-sudo apt-get -yqq update
 export DEBIAN_FRONTEND=noninteractive
-sudo apt-get -yqq install cmake git makedepf90 gfortran gcc patch htop iptraf-ng zlib1g-dev libcurl4-openssl-dev pkg-config gcc-opt autoconf flex librdmacm-dev libnuma-dev doxygen nvidia-cuda-dev texlive-latex-base libfabric-dev
+sudo apt-get -yqq update
+sudo apt-get -yqq upgrade
+sudo apt-get -yqq autoremove
+sudo apt-get -yqq install cmake git makedepf90 gfortran gcc patch htop iptraf-ng zlib1g-dev libcurl4-openssl-dev pkg-config gcc-opt autoconf flex librdmacm-dev libnuma-dev doxygen nvidia-cuda-dev texlive-latex-base libfabric-dev sqlite3 libsqlite3-dev
+
+# This will happen when provisioning and eat CPU cycles
+sudo apt-get -y remove unattended-upgrades
 
 # AzCopy
 wget --quiet --content-disposition https://aka.ms/downloadazcopy-v10-linux && tar zxvf azcopy_linux_amd64_*.tar.gz && sudo cp azcopy_linux_amd64*/azcopy /usr/local/bin/ && rm azcopy* -rf
@@ -41,8 +46,22 @@ wget --quiet https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.
 make -j `nproc` && sudo make install
 cd
 
+# PROJ
+wget --quiet https://download.osgeo.org/proj/proj-6.3.0.tar.gz && tar zxvf proj-6.3.0.tar.gz && cd proj-6.3.0/
+./configure --prefix=/usr 
+make -j `nproc` && sudo make install
+cd
+
+# fortran-proj
+git clone https://gitlab.com/likeno/fortran-proj.git && mkdir fortran-proj/build && cd fortran-proj/build
+cmake .. && make fproj -j && sudo make install
+cd
+
 # MPI Benchmark
 git clone https://github.com/intel/opa-mpi-apps/ && cd opa-mpi-apps/MpiApps/apps/imb/src
 make CC=mpicc
 sudo cp IMB-MPI1 /usr/local/bin
 cd
+
+# Update mandb which will eat some cycles
+mandb

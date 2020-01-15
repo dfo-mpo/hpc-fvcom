@@ -60,6 +60,12 @@
     args:
       creates: /opt/data
 
+  - name: Master node
+    become: yes
+    become_user: hpc
+    run_once: true
+    shell: uname
+
   - name: Do science
     become: yes
     become_user: hpc
@@ -71,26 +77,10 @@
 
       # WVI_INLETS4
       # cd /opt/data/wvi_inlets4
-      # mpirun -npernode `nproc` -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom --CASENAME=wvi_inlets4
+      # mpirun -npernode `nproc` -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom_wvi_inlets4_heating --CASENAME=wvi_inlets4
       
       # ESI
-      # cd /opt/data/esi
-      # mpirun -npernode `nproc` -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom --CASENAME=esi
-      
-      
-      
-      # SINGLE HOST TEST
-      # mpirun --bind-to core --camca btl self,vader ./fvcom --CASENAME=wvi_inlets4
+      cd /opt/data/esi
+      mpirun -npernode `nproc` -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom_esi_tide --CASENAME=esi 2>&1 | tee -a ./output/output.txt
+      azcopy copy /opt/data/esi/output "{{ lookup('env','SAS_FVCOM_OUTPUT') }}" --recursive=true
 
-      # Benchmark sendrecv over UCX/IB
-      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts IMB-MPI1 sendrecv
-
-      # Try FVCOM over UCX/IB
-      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts -x UCX_IB_PKEY=$UCX_IB_PKEY ./fvcom --CASENAME=wvi_inlets4
-      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom --CASENAME=wvi_inlets4
-      
-      # Pingpong over UCX/IB
-      # mpirun -npernode 44 -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts -x UCX_IB_PKEY=$UCX_IB_PKEY IMB-MPI1 pingpong
-
-      # 0.0336  132 cores   = 0.00025454545 per core - 3928.57142857
-      # 0.0496  88 cores    = 0.00056363636 - 1774.19354839
