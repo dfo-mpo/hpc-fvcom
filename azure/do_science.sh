@@ -2,6 +2,7 @@
 
 # Number of instances to run
 export TF_VAR_instance_count=6
+export TF_VAR_resource_location="East US"
 
 echo building infrastructure...
 terraform init

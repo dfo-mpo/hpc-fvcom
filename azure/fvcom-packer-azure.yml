@@ -60,6 +60,11 @@
     args:
       creates: /opt/data
 
+  - name: Set Timezone
+    become: yes
+    shell: sudo timedatectl set-timezone America/Toronto
+
+
   - name: Master node
     become: yes
     become_user: hpc
@@ -76,11 +81,15 @@
       export UCX_IB_PKEY=$modified_key
 
       # WVI_INLETS4
+      # sudo mkdir /mnt/output
+      # sudo chmod 777 -R /mnt
       # cd /opt/data/wvi_inlets4
-      # mpirun -npernode `nproc` -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom_wvi_inlets4_heating --CASENAME=wvi_inlets4
+      # mpirun -npernode `nproc` -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom_wvi_inlets4_heating --CASENAME=wvi_inlets4 | tee -a /mnt/output/output.txt
       
       # ESI
+      sudo mkdir /mnt/output
+      sudo chmod 777 -R /mnt
       cd /opt/data/esi
-      mpirun -npernode `nproc` -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom_esi_tide --CASENAME=esi 2>&1 | tee -a ./output/output.txt
-      azcopy copy /opt/data/esi/output "{{ lookup('env','SAS_FVCOM_OUTPUT') }}" --recursive=true
+      mpirun -npernode `nproc` -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom_esi_tide --CASENAME=esi 2>&1 | tee -a /mnt/output/output.txt
+      azcopy copy /mnt/output "{{ lookup('env','SAS_FVCOM_OUTPUT') }}" --recursive=true
 
