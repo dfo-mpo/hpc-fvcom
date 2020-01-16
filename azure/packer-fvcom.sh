@@ -8,17 +8,6 @@ azcopy copy "$SAS_FVCOM_CODE" /opt --recursive=true
 
 sudo chmod -R 777 /opt/code
 
-#cd /opt/code/FVCOM41/Configure/
-#./setup -a UBUNTU-16.04-GCC -c wvi_inlets4_heating
-
-#make clean
-#make libs -j
-#make gotm -j
-#make fvcom -j
-#make -j
-
-#sudo cp /opt/code/FVCOM41/FVCOM_source/fvcom /usr/local/bin
-
 cd /opt/code/FVCOM41/Configure/
 for i in config/*
 do
