@@ -1,3 +1,7 @@
+provider "azurerm" {
+  version = ">=1.43.0"
+}
+
 variable "instance_count" {
   description = "Defines the number of VMs to be provisioned."
   #default     = "2"
@@ -36,8 +40,8 @@ variable "accelerated" {
   ]
 }
 data "azurerm_shared_image" "hpc-sig-image" {
-  name              = "ompi"
-  gallery_name      = "hpcimages"
+  name                = "ompi"
+  gallery_name        = "hpcimages"
   resource_group_name = "packer-hpc-rg"
 }
 
@@ -96,53 +100,29 @@ resource "azurerm_availability_set" "avset" {
   managed                      = true
 }
 
-resource "azurerm_virtual_machine" "vm" {
+resource "azurerm_linux_virtual_machine" "vm" {
   count                 = var.instance_count
   name                  = "hpc-${lower(var.app_name)}-vm${count.index + 1}"
   location              = azurerm_resource_group.RG.location
   availability_set_id   = azurerm_availability_set.avset.id
   resource_group_name   = azurerm_resource_group.RG.name
   network_interface_ids = [element(azurerm_network_interface.vnic.*.id, count.index)]
-  vm_size               = var.instance_size
+  size                  = var.instance_size
 
-  # Uncomment this line to delete the OS disk automatically when deleting the VM
-  delete_os_disk_on_termination = true
+  source_image_id       = data.azurerm_shared_image.hpc-sig-image.id
 
-  # Uncomment this line to delete the data disks automatically when deleting the VM
-  delete_data_disks_on_termination = true
-
-  #storage_image_reference {
-    #publisher = "Canonical"
-    #offer     = "UbuntuServer"
-    #sku       = "18.04-LTS"
-    #version   = "latest"
-  #}
-
-  storage_image_reference {
-    #id = data.azurerm_image.fvcomimage.id
-    id = data.azurerm_shared_image.hpc-sig-image.id
-  }
-
-  storage_os_disk {
+  os_disk {
     name              = "osdisk${count.index + 1}"
     caching           = "ReadWrite"
-    create_option     = "FromImage"
-    #managed_disk_type = "StandardSSD_LRS"
-    managed_disk_type = "Premium_LRS"
+    storage_account_type = "StandardSSD_LRS"
     disk_size_gb      = "64"
   }
+  computer_name  = "hpc-${lower(var.app_name)}-vm${count.index + 1}"
+  admin_username = "ubuntu"
 
-  os_profile {
-    computer_name  = "hpc-${lower(var.app_name)}-vm${count.index + 1}"
-    admin_username = "ubuntu"
-  }
-  os_profile_linux_config {
-    disable_password_authentication = "true"
-
-    ssh_keys {
-      path     = "/home/ubuntu/.ssh/authorized_keys"
-      key_data = file("~/ubuntu.key.pub")
-    }
+  admin_ssh_key {
+    username     = "ubuntu"
+    public_key = file("~/ubuntu.key.pub")
   }
 }
 
@@ -150,7 +130,7 @@ resource "null_resource" "prep_ansible" {
   triggers = {
     build_number = "${timestamp()}"
   }
-  depends_on = [azurerm_virtual_machine.vm]
+  depends_on = [azurerm_linux_virtual_machine.vm]
 
   provisioner "local-exec" {
     command = "echo [default] ${join(" ", azurerm_public_ip.pip.*.ip_address)} | tr \" \" \"\n\" > ansible.hosts"
