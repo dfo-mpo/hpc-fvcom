@@ -13,3 +13,4 @@ ansible.hosts
 *.key
 *.code-workspace*
 azure/azure-arm-*.pem
+packerlog.txt
