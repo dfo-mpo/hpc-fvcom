@@ -34,7 +34,8 @@
       
       "location": "East US",
       "vm_size": "Standard_F64s_v2",
-      "os_disk_size_gb": 64
+      "os_disk_size_gb": 64,
+      "async_resourcegroup_delete":true
     }
   ],
   "provisioners": [

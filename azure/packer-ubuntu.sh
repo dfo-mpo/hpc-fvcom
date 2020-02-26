@@ -5,18 +5,19 @@
 export DEBIAN_FRONTEND=noninteractive
 sudo timedatectl set-timezone America/Toronto
 
-echo `date` >> /opt/packer-build.txt
-echo `uname -a` >> /opt/packer-build.txt
+echo `date` | sudo tee /opt/packer-build.txt
+echo `uname -a` | sudo tee -a /opt/packer-build.txt
 
 # Wait for initial upgrades to finish (ugh)
 sudo systemd-run --property="After=apt-daily.service apt-daily-upgrade.service" --wait /bin/true
 
 # Murder terrible unattended upgrades which will consume CPU upon creation of a new VM
-sudo apt-get -y purge unattended-upgrades
+sudo systemctl stop walinuxagent
+sudo apt-get -y purge unattended-upgrades walinuxagent
 
 # Dependencies
 sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y autoremove
-sudo apt-get -yqq install cmake git makedepf90 gfortran gcc patch htop iptraf-ng zlib1g-dev libcurl4-openssl-dev pkg-config gcc-opt autoconf flex librdmacm-dev libnuma-dev doxygen nvidia-cuda-dev texlive-latex-base libfabric-dev sqlite3 libsqlite3-dev
+sudo apt-get -yqq install cmake git makedepf90 gfortran gcc patch htop iptraf-ng zlib1g-dev libcurl4-openssl-dev pkg-config gcc-opt autoconf flex librdmacm-dev libnuma-dev doxygen nvidia-cuda-dev texlive-latex-base libfabric-dev sqlite3 libsqlite3-dev powertop
 
 # AzCopy
 wget --quiet --content-disposition https://aka.ms/downloadazcopy-v10-linux && tar zxvf azcopy_linux_amd64_*.tar.gz && sudo cp azcopy_linux_amd64*/azcopy /usr/local/bin/ && rm azcopy* -rf

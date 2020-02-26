@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# AzCopy
+wget --quiet --content-disposition https://aka.ms/downloadazcopy-v10-linux && tar zxvf azcopy_linux_amd64_*.tar.gz && sudo cp azcopy_linux_amd64*/azcopy /usr/local/bin/ && sudo chmod 755 /usr/local/bin/azcopy && rm azcopy* -rf
+
 # FVCOM Setup and Compilation
 # Download FVCOM from Blob
 
