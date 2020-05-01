@@ -90,6 +90,10 @@
       sudo mkdir /mnt/output
       sudo chmod 777 -R /mnt
       cd /opt/data/esi
+      
+      echo "Start time `date`" | tee -a /mnt/output/output.txt
       mpirun -npernode `nproc` -mca pml ucx --mca btl ^vader,tcp,openib --hostfile ~/hosts fvcom_esi_tide --CASENAME=esi 2>&1 | tee -a /mnt/output/output.txt
+      echo "End time `date`" | tee -a /mnt/output/output.txt
       azcopy copy /mnt/output "{{ lookup('env','SAS_FVCOM_OUTPUT') }}" --recursive=true
+      echo "Upload end time `date`" | tee -a /mnt/output/output.txt
 

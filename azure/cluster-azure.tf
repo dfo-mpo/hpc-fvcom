@@ -1,3 +1,8 @@
+provider "azurerm" {
+version = ">2.0.0"
+features {}
+}
+
 variable "instance_count" {
   description = "Defines the number of VMs to be provisioned."
   #default     = "2"
@@ -9,8 +14,8 @@ variable "app_name" {
 
 variable "resource_location" {
   description = "Location of the infrastructure"
-  #default     = "South Central US"
-  default     = "East US"
+  default     = "South Central US"
+#  default     = "East US"
 }
 
 variable "instance_size" {
@@ -20,7 +25,8 @@ variable "instance_size" {
   #default = "Standard_F72s_v2"
   #default = "Standard_B2ms"
   #default = "Standard_H16r"
-  default = "Standard_Hc44rs"
+  #default = "Standard_Hc44rs"
+  default = "Standard_HB120rs_v2"
   #default = "Standard_Hb60rs"
 }
 
@@ -29,8 +35,8 @@ variable "accelerated" {
   default = [
     "Standard_F32s_v2",
     "Standard_F64s_v2",
-    "Standard_F72s_v2",
-    "Standard_HB120rs"
+    "Standard_F72s_v2"
+    #"Standard_HB120rs"
     #"Standard_Hc44rs",
     #"Standard_Hb60rs"
   ]
@@ -53,8 +59,8 @@ data "azurerm_resource_group" "network-rg" {
 
 # Use existing HPC-VNET
 data "azurerm_virtual_network" "vnet" {
-  #name                = "HPC-VNET-SC"
-  name                = "HPC-VNET"
+  name                = "HPC-VNET-SC"
+  #name                = "HPC-VNET"
   resource_group_name = "${data.azurerm_resource_group.network-rg.name}"
 }
 
